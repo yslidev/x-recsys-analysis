@@ -114,6 +114,19 @@
     /* Iowan is a touch small on the body at Distill's default sizes. */
     d-article { font-size: 1.12rem; }
 
+    /* Title: centred, and a size down from the template's 40/50px. Same
+       specificity as the template's rule, so it wins on document order. */
+    d-title h1 {
+      text-align: center;
+      font-size: 30px;
+      line-height: 1.15em;
+      margin: 0 0 1rem;
+    }
+
+    @media (min-width: 768px) {
+      d-title h1 { font-size: 38px; }
+    }
+
     code, pre, kbd, samp,
     d-code, d-code * {
       font-family: var(--mono);
@@ -134,6 +147,10 @@
 
     /* Narrow screens: no room for a margin, so the TOC flows inline. */
     d-article > d-toc {
+      --toc-dot: 6px;       /* diameter of the marker */
+      --toc-gutter: 0.3rem; /* its distance from the list's left edge */
+      --toc-text: 1.5rem;   /* where entry text starts, clearing the gutter */
+
       position: relative;   /* offset parent for .toc-indicator */
       grid-column: text;
       padding-bottom: 1.5rem;
@@ -141,67 +158,83 @@
       border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     }
 
-    d-article > d-toc h2 {
-      margin: 0 0 0.75rem;
-      padding: 0;
-      border: none;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: rgba(0, 0, 0, 0.45);
-    }
+    /* The component always emits an <h2>Table of contents</h2>; the list reads
+       fine without a label. Delete this rule to bring the heading back. */
+    d-article > d-toc h2 { display: none; }
 
     d-article > d-toc ul { margin: 0; padding-left: 0; list-style: none; }
-    d-article > d-toc ul > ul { margin: 0; padding-left: 0.85rem; }
+    /* Nesting adds no padding of its own: every <a> shares one left edge,
+       which is what keeps the dot on a single vertical line whether the
+       current section is a heading or a sub-heading. Sub-entries indent
+       their text with their own padding instead. */
+    d-article > d-toc ul > ul { margin: 0; padding-left: 0; }
     d-article > d-toc li { margin: 0; }
 
     d-article > d-toc a {
+      position: relative;   /* anchors the hover dot */
       display: block;
-      padding: 0.3rem 0 0.3rem 0.75rem;
+      padding: 0.2rem 0 0.2rem var(--toc-text);
       border: none;
-      border-left: 2px solid transparent;
-      line-height: 1.35;
+      line-height: 1.3;
       font-size: 14px;
-      color: rgba(0, 0, 0, 0.55);
+      color: rgba(0, 0, 0, 0.5);
       text-decoration: none;
-      transition: color 0.25s ease, border-color 0.25s ease;
+      transition: color 0.25s ease;
+    }
+
+    d-article > d-toc ul > ul a {
+      padding-left: calc(var(--toc-text) + 0.9rem);
+    }
+
+    /* Faint dot under the cursor, in the same gutter as the live one. */
+    d-article > d-toc a::before {
+      content: "";
+      position: absolute;
+      left: var(--toc-gutter);
+      top: 50%;
+      width: var(--toc-dot);
+      height: var(--toc-dot);
+      margin-top: calc(var(--toc-dot) / -2);
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0;
+      transition: opacity 0.2s ease;
     }
 
     /* The template's `d-article a:hover` puts a full-width underline on every
        link, and it outranks the rule above (a pseudo-class outweighs the extra
-       element selector), so the border has to be cleared again at hover
-       specificity. Hovering shows a faint version of the active side bar. */
+       element selector), so the border has to be cleared at hover specificity. */
     d-article > d-toc a:hover {
       border-bottom: none;
-      border-left-color: rgba(0, 0, 0, 0.22);
       color: rgba(0, 0, 0, 0.9);
     }
 
-    /* Set by the scroll-spy below on the section currently in view. Its side
-       bar is drawn by .toc-indicator, which slides between entries, so the
-       link's own left border stays out of the way. */
+    d-article > d-toc a:hover::before { opacity: 0.3; }
+
+    /* Set by the scroll-spy below on the section currently in view. Its dot is
+       drawn by .toc-indicator, which slides between entries, so the link's own
+       hover dot stays hidden. */
     d-article > d-toc a.active {
       color: #000;
       font-weight: 600;
-      border-left-color: transparent;
     }
 
-    d-article > d-toc a.active:hover { border-left-color: transparent; }
+    d-article > d-toc a.active::before,
+    d-article > d-toc a.active:hover::before { opacity: 0; }
 
-    /* The single bar that glides from one entry to the next. */
+    /* The single dot that glides from one entry to the next. It only ever
+       moves vertically -- `left` is fixed, so sub-entries do not shift it. */
     d-article > d-toc .toc-indicator {
       position: absolute;
       top: 0;
-      left: 0;
-      width: 2px;
-      height: 0;
-      border-radius: 1px;
-      background: rgba(0, 0, 0, 0.8);
+      left: var(--toc-gutter);
+      width: var(--toc-dot);
+      height: var(--toc-dot);
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.85);
       opacity: 0;
       pointer-events: none;
       transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
-                  height 0.34s cubic-bezier(0.22, 1, 0.36, 1),
                   opacity 0.2s ease;
     }
 
@@ -369,13 +402,6 @@
       </tbody>
     </table>
 
-    <figure style="grid-column: page;">
-      <img src="assets/momentum.png" style="width:100%;" />
-      <figcaption>Figure captions go in a <code>&lt;figcaption&gt;</code>. Wrap interactive figures in
-        <code>&lt;d-figure&gt;</code> to get <code>ready</code> / <code>onscreen</code> / <code>offscreen</code>
-        lifecycle events for lazy initialization.</figcaption>
-    </figure>
-
     <d-figure id="lazy-figure"></d-figure>
     <script>
       // Example of the d-figure lifecycle: swap this for your own visualization setup.
@@ -480,8 +506,8 @@
             : '';
         }
 
-        // A single bar that slides between entries, rather than each link
-        // switching its own border on and off.
+        // A single dot that slides between entries, rather than each link
+        // switching its own marker on and off.
         const indicator = document.createElement('span');
         indicator.className = 'toc-indicator';
         toc.appendChild(indicator);
@@ -496,15 +522,14 @@
             return;
           }
           const link = active.link;
-          // Read offsets after the .active class is applied, so the bar matches
-          // the entry at its final (bold) size.
-          const x = link.offsetLeft;
-          const y = link.offsetTop;
-          const h = link.offsetHeight;
-          // Don't glide in from the top corner the first time it appears.
+          // Read offsets after the .active class is applied, so the dot centres
+          // on the entry at its final (bold) size. Only the vertical position
+          // is set: the dot's `left` is fixed in CSS, so it holds one column
+          // whether the active entry is a section or a sub-section.
+          const y = link.offsetTop + (link.offsetHeight / 2) - (indicator.offsetHeight / 2);
+          // Don't glide in from the top the first time it appears.
           if (!shown) indicator.style.transition = 'none';
-          indicator.style.height = h + 'px';
-          indicator.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
+          indicator.style.transform = 'translateY(' + y + 'px)';
           indicator.style.opacity = '1';
           if (!shown) {
             void indicator.offsetHeight; // flush before re-enabling the transition

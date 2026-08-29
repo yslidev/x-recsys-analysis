@@ -56,9 +56,13 @@ the bottom of `<body>`):
   sidebar occupies the same column.
 - **<1000px** — falls back to an inline block above the article; markers return.
 - The entry for the section you're reading is highlighted, updated on scroll.
-  A single side bar (`.toc-indicator`) glides between entries rather than each
-  link flicking its own border on and off; hovering shows a fainter version of
-  the same bar. Both are suppressed under reduced-motion.
+  A single dot (`.toc-indicator`) glides between entries rather than each link
+  flicking its own marker on and off; hovering shows a fainter dot in the same
+  column. Both are suppressed under reduced-motion.
+- The dot holds one vertical column for every entry, section or sub-section.
+  Sub-entries indent their *text* (via the link's own padding, not the nested
+  `<ul>`) so the marker gutter stays put. Tune it with the three custom
+  properties on `d-article > d-toc`: `--toc-dot`, `--toc-gutter`, `--toc-text`.
 - Entries are ordinary `#anchor` links, so they jump (smoothly, unless the reader
   has reduced-motion set).
 
