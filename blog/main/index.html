@@ -100,6 +100,10 @@
       --mono: "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     }
 
+    /* The article commits to a light design; without an explicit background a
+       dark-mode browser paints its own dark ground behind the page. */
+    body { background: #fff; color-scheme: light; }
+
     /* The template sets its sans stack on `html`; this rule sits after the
        injected stylesheet, so it wins on equal specificity and everything
        that inherits (prose, headings, byline, appendix, TOC) follows. */
@@ -285,6 +289,74 @@
       d-article > d-toc a,
       d-article > d-toc .toc-indicator { transition: none; }
     }
+
+    /* --- Hero figure -------------------------------------------------------
+       The animated pipeline in <d-title>, drawn by assets/hero.js onto the
+       canvas below. All geometry lives in the script's logical coordinate
+       system; these rules only size the frame and style the hover card. */
+    #hero-pipeline {
+      grid-column: page;
+      position: relative;
+      margin: 1.75rem 0 0.75rem;
+    }
+
+    #hero-pipeline canvas {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1160 / 560;
+      background: transparent;
+    }
+
+    #hero-pipeline .hero-note {
+      position: absolute;
+      z-index: 3;
+      max-width: min(280px, calc(100% - 24px));
+      padding: 9px 12px;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10);
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(3px);
+      transition: opacity 120ms ease, transform 120ms ease;
+    }
+
+    #hero-pipeline .hero-note[data-show="true"] { opacity: 1; transform: translateY(0); }
+
+    #hero-pipeline .hero-note strong {
+      display: block;
+      margin-bottom: 2px;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+      color: rgba(0, 0, 0, 0.85);
+    }
+
+    #hero-pipeline .hero-note span {
+      display: block;
+      font-family: var(--serif);
+      font-size: 13px;
+      line-height: 1.45;
+      color: rgba(0, 0, 0, 0.6);
+    }
+
+    #hero-pipeline figcaption {
+      max-width: 704px;
+      margin: 0.6rem auto 0;
+      padding: 0 1rem;
+      font-size: 13px;
+      line-height: 1.5;
+      color: rgba(0, 0, 0, 0.5);
+      text-align: center;
+    }
+
+    /* The hover card and its hint assume a pointer; the animation itself
+       still runs on touch screens, where stages respond to a tap. */
+    @media (hover: none) {
+      #hero-pipeline .pointer-hint { display: none; }
+    }
   </style>
 </head>
 
@@ -296,8 +368,8 @@
 
   <d-front-matter>
     <script id='distill-front-matter' type="text/json">{
-      "title": "Your Title Here",
-      "description": "One or two sentences that describe the article. This shows up in the page metadata and in link previews.",
+      "title": "Inside the Machine: A Technical Analysis of X's 2026 Recommendation Algorithm",
+      "description": "A walk through the open-source code that builds the For You feed: how a post becomes a candidate, and how one request turns everything published in the last 48 hours into the 35 posts you see.",
       "published": "Aug 29, 2026",
       "authors": [
         {
@@ -315,12 +387,26 @@
   </d-front-matter>
 
   <d-title>
-    <figure style="grid-column: page; margin: 1rem 0;">
-      <img src="assets/momentum.png" style="width:100%; border: 1px solid rgba(0, 0, 0, 0.2);" />
+    <figure id="hero-pipeline"
+        role="img"
+        aria-label="An animated diagram of X's For You pipeline. A request pulse travels from the feed
+          back to four candidate sources — Thunder, Phoenix, SimClusters and TweetMixer — which emit a
+          stream of dots representing posts. The dots pass through five gates (hydrate, filter, score,
+          diversify, visibility); most are removed along the way, and the roughly ten survivors dock
+          into a small For You feed panel alongside an ad and a who-to-follow module.">
+      <canvas></canvas>
+      <div class="hero-note" data-show="false" aria-hidden="true"><strong></strong><span></span></div>
+      <figcaption>
+        One request through the pipeline: candidates stream from four sources, are hydrated, filtered,
+        scored, diversified, and checked for visibility; the top 50 become the ~35 posts you see.
+        Dot counts are illustrative — the numbers are the code's own.<span class="pointer-hint">
+        Hover a stage for what it does.</span>
+      </figcaption>
     </figure>
-    <p>The teaser paragraph. It sits under the title, above the byline, and should give the reader the
-      one-sentence version of the argument before they commit to reading. Replace the hero image above
-      with your own figure, or delete the <code>&lt;figure&gt;</code> block entirely.</p>
+    <p>When you open the For You tab, X has a few hundred milliseconds to reduce everything posted in
+      the last 48 hours down to the 35 posts in front of you. The code that does it is open source.
+      This article walks that code end to end: the half that runs while you sleep, the half that runs
+      when you ask, and the places where what the system rewards is a deliberate, legible choice.</p>
   </d-title>
 
   <d-byline></d-byline>
@@ -428,6 +514,8 @@
   </d-appendix>
 
   <distill-footer></distill-footer>
+
+  <script src="assets/hero.js" defer></script>
 
   <script>
     // --- Fonts inside shadow roots -----------------------------------------
