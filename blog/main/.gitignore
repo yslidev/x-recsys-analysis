@@ -1,0 +1,5 @@
+# Built from ../template via `make template`
+template.v2.js
+template.v2.js.map
+.DS_Store
+dist/

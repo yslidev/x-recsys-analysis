@@ -1,0 +1,573 @@
+<!doctype html>
+
+<head>
+  <!--
+    Distill template runtime, built locally from ../template.
+    Rebuild + re-copy it with `make template` after editing the framework source.
+    Swap in the commented line below to use the published build instead (no npm needed).
+  -->
+  <script src="template.v2.js"></script>
+  <!-- <script src="https://distill.pub/template.v2.js"></script> -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf8">
+
+  <style>
+    /* --- Typography -------------------------------------------------------
+       Iowan Old Style (Bitstream) for prose and headings, Berkeley Mono for
+       code. Both are self-hosted from assets/fonts; nothing is fetched from
+       a CDN, so the page renders identically offline.
+
+       Note on the metadata: the Black faces ship under their own family name
+       ("IowanOldSt Blk BT") and both Black files report usWeightClass 400,
+       while Berkeley Mono's oblique faces are separate families too. The
+       weights and styles below are therefore declared explicitly rather than
+       inherited from the files. */
+
+    @font-face {
+      font-family: "Iowan Old Style";
+      src: url("assets/fonts/IowanOldStyle/IowanOldStyle-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Iowan Old Style";
+      src: url("assets/fonts/IowanOldStyle/IowanOldStyle-Italic.woff2") format("woff2");
+      font-weight: 400;
+      font-style: italic;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Iowan Old Style";
+      src: url("assets/fonts/IowanOldStyle/IowanOldStyle-Bold.woff2") format("woff2");
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Iowan Old Style";
+      src: url("assets/fonts/IowanOldStyle/IowanOldStyle-BoldItalic.woff2") format("woff2");
+      font-weight: 700;
+      font-style: italic;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Iowan Old Style";
+      src: url("assets/fonts/IowanOldStyle/IowanOldStyle-Black.woff2") format("woff2");
+      font-weight: 900;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Iowan Old Style";
+      src: url("assets/fonts/IowanOldStyle/IowanOldStyle-BlackItalic.woff2") format("woff2");
+      font-weight: 900;
+      font-style: italic;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Berkeley Mono";
+      src: url("assets/fonts/BerkeleyMono/BerkeleyMono-Regular.ttf") format("truetype");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Berkeley Mono";
+      src: url("assets/fonts/BerkeleyMono/BerkeleyMono-Oblique.ttf") format("truetype");
+      font-weight: 400;
+      font-style: oblique;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Berkeley Mono";
+      src: url("assets/fonts/BerkeleyMono/BerkeleyMono-Bold.ttf") format("truetype");
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Berkeley Mono";
+      src: url("assets/fonts/BerkeleyMono/BerkeleyMono-Bold-Oblique.ttf") format("truetype");
+      font-weight: 700;
+      font-style: oblique;
+      font-display: swap;
+    }
+
+    :root {
+      --serif: "Iowan Old Style", "Iowan Old Style BT", Iowan, Georgia, "Times New Roman", serif;
+      --mono: "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    /* The template sets its sans stack on `html`; this rule sits after the
+       injected stylesheet, so it wins on equal specificity and everything
+       that inherits (prose, headings, byline, appendix, TOC) follows. */
+    html { font-family: var(--serif); }
+
+    d-title h1,
+    d-article h1, d-article h2, d-article h3, d-article h4,
+    d-appendix h3 {
+      font-family: var(--serif);
+    }
+
+    /* Iowan is a touch small on the body at Distill's default sizes. */
+    d-article { font-size: 1.12rem; }
+
+    code, pre, kbd, samp,
+    d-code, d-code * {
+      font-family: var(--mono);
+      font-feature-settings: normal;
+    }
+
+    /* --- <d-toc> as a docked sidebar --------------------------------------
+       The stock component ships with no layout styles and is not in the
+       template's grid list, so by default it renders full-bleed against the
+       left edge. It also emits an always-empty <nav class="table-of-contents">
+       and a stray <br> after every h2 entry.
+
+       These rules must sit AFTER the template <script> above: the framework
+       injects its stylesheet immediately before the first script tag in head,
+       so anything declared after it wins on equal specificity. The
+       `d-article >` qualifier also outranks the component's own inline
+       `d-toc { display: block }`, injected into the body at runtime. */
+
+    /* Narrow screens: no room for a margin, so the TOC flows inline. */
+    d-article > d-toc {
+      position: relative;   /* offset parent for .toc-indicator */
+      grid-column: text;
+      padding-bottom: 1.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    d-article > d-toc h2 {
+      margin: 0 0 0.75rem;
+      padding: 0;
+      border: none;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(0, 0, 0, 0.45);
+    }
+
+    d-article > d-toc ul { margin: 0; padding-left: 0; list-style: none; }
+    d-article > d-toc ul > ul { margin: 0; padding-left: 0.85rem; }
+    d-article > d-toc li { margin: 0; }
+
+    d-article > d-toc a {
+      display: block;
+      padding: 0.3rem 0 0.3rem 0.75rem;
+      border: none;
+      border-left: 2px solid transparent;
+      line-height: 1.35;
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.55);
+      text-decoration: none;
+      transition: color 0.25s ease, border-color 0.25s ease;
+    }
+
+    /* The template's `d-article a:hover` puts a full-width underline on every
+       link, and it outranks the rule above (a pseudo-class outweighs the extra
+       element selector), so the border has to be cleared again at hover
+       specificity. Hovering shows a faint version of the active side bar. */
+    d-article > d-toc a:hover {
+      border-bottom: none;
+      border-left-color: rgba(0, 0, 0, 0.22);
+      color: rgba(0, 0, 0, 0.9);
+    }
+
+    /* Set by the scroll-spy below on the section currently in view. Its side
+       bar is drawn by .toc-indicator, which slides between entries, so the
+       link's own left border stays out of the way. */
+    d-article > d-toc a.active {
+      color: #000;
+      font-weight: 600;
+      border-left-color: transparent;
+    }
+
+    d-article > d-toc a.active:hover { border-left-color: transparent; }
+
+    /* The single bar that glides from one entry to the next. */
+    d-article > d-toc .toc-indicator {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 2px;
+      height: 0;
+      border-radius: 1px;
+      background: rgba(0, 0, 0, 0.8);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+                  height 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity 0.2s ease;
+    }
+
+    /* Artifacts of the component's own generated markup. */
+    d-article > d-toc br { display: none; }
+    d-article > d-toc nav.table-of-contents { display: none; }
+
+    /* Wide screens: dock it in the left margin, beside the writing.
+       1000px is where the template's own grid gains enough room
+       (screen-start -> text-start is ~250px and grows from there). */
+    @media (min-width: 1000px) {
+      /* The template sets `overflow-x: hidden` on d-article, which makes it a
+         scroll container and silently kills `position: sticky` on any child.
+         `clip` gives the same overflow protection without that side effect. */
+      d-article {
+        overflow-x: clip;
+      }
+
+      d-article > d-toc {
+        /* grid-row is set from JS to span the article's full height, which is
+           what gives the sticky element room to travel. */
+        grid-column: screen-start / text-start;
+        justify-self: end;
+        align-self: start;
+        position: sticky;
+        top: 1.5rem;
+        width: 100%;
+        max-width: 260px;
+        max-height: calc(100vh - 3rem);
+        overflow-y: auto;
+        margin-bottom: 0;
+        padding: 0 1.5rem 0 0;
+        border-bottom: none;
+        border-right: 1px solid rgba(0, 0, 0, 0.1);
+      }
+
+      /* The section-number markers live in the kicker column, which the
+         docked TOC now covers. Hide them only where the sidebar is shown. */
+      d-article .marker { display: none; }
+    }
+
+    /* Anchor jumps land with the heading clear of the viewport edge. */
+    d-article h2, d-article h3 { scroll-margin-top: 2rem; }
+
+    html { scroll-behavior: smooth; }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      d-article > d-toc a,
+      d-article > d-toc .toc-indicator { transition: none; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Distill's site header is suppressed. The tag has to stay (with distill-prerendered)
+       rather than be deleted: `make render` re-inserts a full header when no tag is found.
+       Delete these two lines only if you want the distill.pub nav bar back. -->
+  <distill-header distill-prerendered></distill-header>
+
+  <d-front-matter>
+    <script id='distill-front-matter' type="text/json">{
+      "title": "Your Title Here",
+      "description": "One or two sentences that describe the article. This shows up in the page metadata and in link previews.",
+      "published": "Aug 29, 2026",
+      "authors": [
+        {
+          "author": "Idhant Gulati",
+          "authorURL": "https://example.com/",
+          "affiliations": [{"name": "UC Berkeley", "url": "https://berkeley.edu"}]
+        }
+      ],
+      "katex": {
+        "delimiters": [
+          {"left": "$$", "right": "$$", "display": false}
+        ]
+      }
+    }</script>
+  </d-front-matter>
+
+  <d-title>
+    <figure style="grid-column: page; margin: 1rem 0;">
+      <img src="assets/momentum.png" style="width:100%; border: 1px solid rgba(0, 0, 0, 0.2);" />
+    </figure>
+    <p>The teaser paragraph. It sits under the title, above the byline, and should give the reader the
+      one-sentence version of the argument before they commit to reading. Replace the hero image above
+      with your own figure, or delete the <code>&lt;figure&gt;</code> block entirely.</p>
+  </d-title>
+
+  <d-byline></d-byline>
+
+  <d-article>
+    <!-- Auto-generated from the h2/h3 ids below; add no-toc to a heading to skip it.
+         It has to live inside <d-article> to sit on the article's column grid.
+         Styling and the scroll-spy that drives .active are at the bottom of this file. -->
+    <d-toc></d-toc>
+
+    <a class="marker" href="#section-1"><span>1</span></a>
+    <h2 id="section-1">Section heading</h2>
+    <p>Body text goes here. Distill lays the article out on a named grid, so most content sits in the
+      <code>text</code> column while figures can opt into wider columns.</p>
+
+    <aside>An aside lives in the margin. Good for a short note that would break the flow inline.</aside>
+
+    <p>The available grid columns are <code>text</code> (the default), <code>page</code>, <code>screen</code>,
+      <code>middle</code>, and <code>gutter</code>. Set them with <code>style="grid-column: page;"</code> on a
+      figure or any block element.</p>
+
+    <a class="marker" href="#section-1.1"><span>1.1</span></a>
+    <h3 id="section-1.1">Math</h3>
+    <p>Inline math with the element form: <d-math>c = a^2 + b^2</d-math>. Or with the <code>$$</code>
+      delimiters configured in the front matter: $$x^2$$. Block math:</p>
+
+    <d-math block>
+      \text{Attention}(Q, K, V) = \text{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}} + M\right) V
+    </d-math>
+
+    <a class="marker" href="#section-1.2"><span>1.2</span></a>
+    <h3 id="section-1.2">Citations and footnotes</h3>
+    <p>Cite one source<d-cite key="mercier2011humans"></d-cite>, or several at once<d-cite
+        key="gregor2015draw,openai2018charter"></d-cite>. Keys come from
+      <code>bibliography.bib</code>, which is loaded by the <code>&lt;d-bibliography&gt;</code> tag in the
+      appendix. Footnotes<d-footnote>Footnotes render as a hover box inline and are collected in the
+        appendix. They can contain math — <d-math>c = \sum_0^i{x}</d-math> — and even citations<d-cite
+          key="gregor2015draw"></d-cite>.</d-footnote> work the same way.</p>
+
+    <a class="marker" href="#section-2"><span>2</span></a>
+    <h2 id="section-2">Code</h2>
+    <p>Inline code: <d-code language="python">mask = torch.triu(ones, diagonal=1)</d-code>. And a block:</p>
+
+    <d-code block language="python">
+      import torch
+
+      def causal_mask(seq_len: int) -> torch.Tensor:
+          """Upper-triangular mask; True positions are disallowed."""
+          return torch.triu(torch.ones(seq_len, seq_len, dtype=torch.bool), diagonal=1)
+    </d-code>
+
+    <a class="marker" href="#section-3"><span>3</span></a>
+    <h2 id="section-3">Tables and figures</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Recall@10</th>
+          <th>NDCG@10</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Baseline</td>
+          <td>0.142</td>
+          <td>0.081</td>
+        </tr>
+        <tr>
+          <td>+ RoPE</td>
+          <td>0.168</td>
+          <td>0.097</td>
+        </tr>
+        <tr>
+          <td>+ causal mask</td>
+          <td>0.171</td>
+          <td>0.099</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <figure style="grid-column: page;">
+      <img src="assets/momentum.png" style="width:100%;" />
+      <figcaption>Figure captions go in a <code>&lt;figcaption&gt;</code>. Wrap interactive figures in
+        <code>&lt;d-figure&gt;</code> to get <code>ready</code> / <code>onscreen</code> / <code>offscreen</code>
+        lifecycle events for lazy initialization.</figcaption>
+    </figure>
+
+    <d-figure id="lazy-figure"></d-figure>
+    <script>
+      // Example of the d-figure lifecycle: swap this for your own visualization setup.
+      const figure = document.querySelector("d-figure#lazy-figure");
+      const tag = document.createElement("span");
+      tag.textContent = "d-figure: initialized";
+      figure.appendChild(tag);
+      figure.addEventListener("ready", () => { tag.textContent = "d-figure: ready"; });
+      figure.addEventListener("onscreen", () => { tag.textContent = "d-figure: onscreen"; });
+      figure.addEventListener("offscreen", () => { tag.textContent = "d-figure: offscreen"; });
+    </script>
+
+    <p>That's the whole component set. Start deleting.</p>
+  </d-article>
+
+  <d-appendix>
+    <h3>Contributions</h3>
+    <p>Who did what.</p>
+
+    <h3>Reviewers</h3>
+    <p>Who reviewed it, with links.</p>
+
+    <d-bibliography src="bibliography.bib"></d-bibliography>
+  </d-appendix>
+
+  <distill-footer></distill-footer>
+
+  <script>
+    // --- Fonts inside shadow roots -----------------------------------------
+    // <d-code> renders into a shadow root and injects Prism's stylesheet
+    // there, which hard-sets `font-family: Consolas, Monaco, ... monospace`
+    // on the code element. Shadow styles beat inherited ones, so the page's
+    // --mono never reaches it. Same story for <d-cite>, which pins a sans
+    // stack on the citation markers sitting inline in the prose.
+    // Appending our own style last in each shadow root fixes both without
+    // touching ../template (so it survives `make template`).
+    (function () {
+      const root = getComputedStyle(document.documentElement);
+      const mono = root.getPropertyValue('--mono').trim();
+      const serif = root.getPropertyValue('--serif').trim();
+
+      const patches = [
+        ['d-code', 'code, pre, code[class*="language-"], pre[class*="language-"] { font-family: ' + mono + '; }'],
+        ['d-cite', ':host, div, span, a { font-family: ' + serif + '; }'],
+      ];
+
+      function paint() {
+        let pending = 0;
+        for (const [tag, css] of patches) {
+          for (const el of document.querySelectorAll(tag)) {
+            if (!el.shadowRoot) { pending++; continue; }
+            if (el.shadowRoot.querySelector('style[data-font-patch]')) continue;
+            const style = document.createElement('style');
+            style.setAttribute('data-font-patch', '');
+            style.textContent = css;
+            el.shadowRoot.appendChild(style);   // last wins over Prism's rules
+          }
+        }
+        return pending === 0;
+      }
+
+      if (!paint()) {
+        document.addEventListener('DOMContentLoaded', paint);
+        window.addEventListener('load', paint);
+      }
+      window.addEventListener('load', paint);
+    })();
+  </script>
+
+  <script>
+    // --- Table of contents: scroll-spy + sticky sizing ----------------------
+    // The <d-toc> component builds its own markup, either at build time
+    // (`make render`, which stamps prerendered="true") or on window load.
+    // We wire up once its links exist, whichever path got us there.
+    (function () {
+      // Distance from the top of the viewport that counts as "you are here".
+      const SPY_LINE = 100;
+
+      let wired = false;
+
+      function wire() {
+        if (wired) return true;
+
+        const article = document.querySelector('d-article');
+        const toc = document.querySelector('d-toc');
+        if (!article || !toc) return false;
+
+        const sections = Array.from(toc.querySelectorAll('a[href^="#"]'))
+          .map(link => ({ link: link, target: document.getElementById(decodeURIComponent(link.hash.slice(1))) }))
+          .filter(s => s.target);
+        if (!sections.length) return false;
+
+        wired = true;
+
+        // `position: sticky` only travels within the element's own grid area,
+        // so the sidebar has to span every row of the article. Only in the
+        // wide layout — inline, spanning rows would overlap the body text.
+        const wide = window.matchMedia('(min-width: 1000px)');
+        function setSpan() {
+          toc.style.gridRow = wide.matches
+            ? '1 / span ' + Math.max(article.children.length, 1)
+            : '';
+        }
+
+        // A single bar that slides between entries, rather than each link
+        // switching its own border on and off.
+        const indicator = document.createElement('span');
+        indicator.className = 'toc-indicator';
+        toc.appendChild(indicator);
+
+        let active = null;
+        let shown = false;
+
+        function moveIndicator() {
+          if (!active) {
+            indicator.style.opacity = '0';
+            shown = false;
+            return;
+          }
+          const link = active.link;
+          // Read offsets after the .active class is applied, so the bar matches
+          // the entry at its final (bold) size.
+          const x = link.offsetLeft;
+          const y = link.offsetTop;
+          const h = link.offsetHeight;
+          // Don't glide in from the top corner the first time it appears.
+          if (!shown) indicator.style.transition = 'none';
+          indicator.style.height = h + 'px';
+          indicator.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
+          indicator.style.opacity = '1';
+          if (!shown) {
+            void indicator.offsetHeight; // flush before re-enabling the transition
+            indicator.style.transition = '';
+            shown = true;
+          }
+        }
+
+        function setActive(next) {
+          if (next === active) return;
+          if (active) active.link.classList.remove('active');
+          active = next;
+          if (active) active.link.classList.add('active');
+          moveIndicator();
+        }
+
+        // The current section is the last one whose heading has crossed the line.
+        function update() {
+          let current = null;
+          for (const section of sections) {
+            if (section.target.getBoundingClientRect().top - SPY_LINE > 0) break;
+            current = section;
+          }
+          setActive(current);
+        }
+
+        let queued = false;
+        function onScroll() {
+          if (queued) return;
+          queued = true;
+          requestAnimationFrame(function () { queued = false; update(); });
+        }
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', function () { setSpan(); update(); moveIndicator(); });
+        window.addEventListener('hashchange', update);
+
+        // Jumping is handled natively by the #anchors, but highlight the
+        // clicked entry straight away rather than waiting for the scroll.
+        toc.addEventListener('click', function (event) {
+          const link = event.target.closest('a[href^="#"]');
+          if (!link) return;
+          const match = sections.find(function (s) { return s.link === link; });
+          if (match) setActive(match);
+        });
+
+        setSpan();
+        update();
+        return true;
+      }
+
+      // The component renders on load; retry until its links show up.
+      if (!wire()) {
+        document.addEventListener('DOMContentLoaded', wire);
+        window.addEventListener('load', wire);
+        const toc = document.querySelector('d-toc');
+        if (toc) {
+          const observer = new MutationObserver(function () {
+            if (wire()) observer.disconnect();
+          });
+          observer.observe(toc, { childList: true });
+        }
+      }
+    })();
+  </script>
+</body>
