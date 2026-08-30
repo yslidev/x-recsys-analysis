@@ -179,8 +179,10 @@
       display: block;
       padding: 0.2rem 0 0.2rem var(--toc-text);
       border: none;
-      line-height: 1.3;
-      font-size: 14px;
+      line-height: 1.4;
+      font-family: var(--mono);
+      font-size: 12px;
+      text-transform: lowercase;
       color: rgba(0, 0, 0, 0.5);
       text-decoration: none;
       transition: color 0.25s ease;
@@ -295,15 +297,19 @@
        canvas below. All geometry lives in the script's logical coordinate
        system; these rules only size the frame and style the hover card. */
     #hero-pipeline {
-      grid-column: page;
+      /* Wider than `page`: the hero takes the full screen column, capped so
+         the mono labels stay in proportion on very large displays. */
+      grid-column: screen;
+      width: min(1360px, calc(100% - 2rem));
+      justify-self: center;
       position: relative;
-      margin: 1.75rem 0 0.75rem;
+      margin: 2rem 0 0.75rem;
     }
 
     #hero-pipeline canvas {
       display: block;
       width: 100%;
-      aspect-ratio: 1160 / 560;
+      aspect-ratio: 1160 / 590;
       background: transparent;
     }
 
@@ -340,6 +346,18 @@
       font-size: 13px;
       line-height: 1.45;
       color: rgba(0, 0, 0, 0.6);
+    }
+
+    /* Where in the repo this stage lives. */
+    #hero-pipeline .hero-note .note-path {
+      display: block;
+      margin-top: 6px;
+      padding-top: 5px;
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.02em;
+      color: rgba(0, 0, 0, 0.45);
     }
 
     #hero-pipeline figcaption {
@@ -395,7 +413,7 @@
           diversify, visibility); most are removed along the way, and the roughly ten survivors dock
           into a small For You feed panel alongside an ad and a who-to-follow module.">
       <canvas></canvas>
-      <div class="hero-note" data-show="false" aria-hidden="true"><strong></strong><span></span></div>
+      <div class="hero-note" data-show="false" aria-hidden="true"><strong></strong><span></span><em class="note-path"></em></div>
       <figcaption>
         One request through the pipeline: candidates stream from four sources, are hydrated, filtered,
         scored, diversified, and checked for visibility; the top 50 become the ~35 posts you see.
