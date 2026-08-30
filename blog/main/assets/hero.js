@@ -145,22 +145,22 @@
     { rect: [28, 388, 190, 60], title: 'TweetMixer',
       body: 'An additional recall service contributing graph-based candidate paths.',
       path: 'home-mixer/sources/tweet_mixer_source.rs' },
-    { rect: [228, 160, 110, 265], title: '3,000–4,000 candidates',
+    { rect: [222, 150, 152, 275], title: '3,000–4,000 candidates',
       body: 'The sources return only post IDs — hollow dots here. Everything after this narrows the pool down.',
       path: 'home-mixer/sources/' },
-    { rect: [376, 130, 44, 320], title: 'Candidate hydration',
+    { rect: [374, 130, 81, 320], title: 'Candidate hydration',
       body: '12 parallel lookups fill each ID in: text, media, author, language, engagement counts. Hollow ids become solid posts.',
       path: 'home-mixer/candidate_hydrators/' },
-    { rect: [490, 130, 44, 320], title: '18 sequential filters',
+    { rect: [455, 130, 114, 320], title: '18 sequential filters',
       body: 'Older than 48 h, already seen, your own posts, blocked or muted authors, muted keywords, NSFW rules — most of the pool dies here.',
       path: 'home-mixer/filters/' },
-    { rect: [604, 130, 44, 320], title: 'Phoenix scoring',
+    { rect: [569, 130, 114, 320], title: 'Phoenix scoring',
       body: 'One transformer pass predicts P(like), P(reply), P(report)… per post; 26 fixed weights fold them into a single score.',
       path: 'home-mixer/scorers/ · phoenix/' },
-    { rect: [718, 130, 44, 320], title: 'Diversity re-rank',
+    { rect: [683, 130, 113, 320], title: 'Diversity re-rank',
       body: 'A MAP-DPP pass trades raw score for dissimilarity, then only the top 50 survive (TOP_K_CANDIDATES_TO_SELECT).',
       path: 'vm-ranker/dpp.rs' },
-    { rect: [830, 130, 44, 320], title: 'Visibility filtering',
+    { rect: [796, 130, 92, 320], title: 'Visibility filtering',
       body: 'Per-viewer safety rules decide allow, interstitial, or drop — the only stage that can make a post vanish for you.',
       path: 'visibility-filtering/' },
     { rect: [800, 32, 110, 76], title: 'The other half',
@@ -730,17 +730,46 @@
     var cssW = canvas.clientWidth || figure.clientWidth;
     if (!cssW) return;
     var cssH = cssW * (H / W);
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // Full device resolution, uncapped: canvas text is raster, so anything
+    // less than the true pixel ratio reads as soft next to the DOM text.
+    var dpr = window.devicePixelRatio || 1;
     canvas.width = Math.round(cssW * dpr);
     canvas.height = Math.round(cssH * dpr);
     scale = cssW / W;
     ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
   }
 
+  // Browser zoom changes devicePixelRatio without necessarily changing the
+  // element's CSS size, so ResizeObserver alone misses it; re-rasterize on
+  // every effective-DPR change or the canvas is left blurry at the new zoom.
+  (function watchDpr() {
+    if (!window.matchMedia) return;
+    var mq = matchMedia('(resolution: ' + (window.devicePixelRatio || 1) + 'dppx)');
+    if (!mq.addEventListener) return;
+    mq.addEventListener('change', function () {
+      resize();
+      render(lastT);
+      watchDpr();
+    }, { once: true });
+  })();
+
   /* ---- notes (hover / tap) ---------------------------------------------- */
+
+  /* The card follows the pointer on the same clock as the canvas: pointer
+     moves only update a target; the main animation loop eases the card toward
+     it with frame-rate-independent exponential smoothing and paints it via
+     transform: translate3d (compositor-only — no layout, no jitter). The
+     card's size is cached when its content changes, so pointer moves never
+     force layout. When the loop isn't running (reduced motion), the card
+     tracks the pointer directly. The cursor is left alone — no `help`
+     question mark. */
 
   var note = figure.querySelector('.hero-note');
   var activeNote = null;
+  var noteShown = false;
+  var noteW = 0, noteH = 0;   // cached card size
+  var noteTX = 0, noteTY = 0; // target position
+  var noteX = 0, noteY = 0;   // rendered position
 
   function findNote(lx, ly) {
     for (var i = 0; i < NOTES.length; i++) {
@@ -750,47 +779,83 @@
     return null;
   }
 
-  function showNote(n, clientX, clientY) {
-    if (!note) return;
-    if (n === activeNote) return;
-    activeNote = n;
-    if (!n) { note.dataset.show = 'false'; return; }
-    note.querySelector('strong').textContent = n.title;
-    note.querySelector('span').textContent = n.body;
-    var pathEl = note.querySelector('.note-path');
-    if (pathEl) {
-      pathEl.textContent = n.path || '';
-      pathEl.style.display = n.path ? 'block' : 'none';
-    }
-    note.dataset.show = 'true';
+  function measureNote() {
+    noteW = note.offsetWidth;
+    noteH = note.offsetHeight;
+  }
+
+  // Target beside the pointer, flipped and clamped to stay inside the figure.
+  function aimNote(clientX, clientY) {
     var frame = figure.getBoundingClientRect();
-    var x = clientX - frame.left + 14;
-    var y = clientY - frame.top + 14;
-    // Keep the card inside the figure.
-    note.style.left = '0px'; note.style.top = '0px';
-    var nw = note.offsetWidth, nh = note.offsetHeight;
-    if (x + nw > frame.width - 8) x = clientX - frame.left - nw - 14;
-    if (y + nh > frame.height - 8) y = frame.height - nh - 8;
-    note.style.left = Math.max(4, x) + 'px';
-    note.style.top = Math.max(4, y) + 'px';
+    var x = clientX - frame.left + 16;
+    var y = clientY - frame.top + 16;
+    if (x + noteW > frame.width - 8) x = clientX - frame.left - noteW - 16;
+    if (y + noteH > frame.height - 8) y = clientY - frame.top - noteH - 16;
+    noteTX = Math.max(4, Math.min(x, frame.width - noteW - 4));
+    noteTY = Math.max(4, y);
+  }
+
+  function paintNote() {
+    note.style.transform =
+      'translate3d(' + noteX.toFixed(1) + 'px,' + noteY.toFixed(1) + 'px,0)';
+  }
+
+  // One smoothing step, called from the main loop with the frame's dt (ms).
+  function tickNote(dt) {
+    if (!noteShown) return;
+    var k = 1 - Math.exp(-dt / 70);
+    noteX += (noteTX - noteX) * k;
+    noteY += (noteTY - noteY) * k;
+    paintNote();
   }
 
   function onPointer(ev) {
+    if (!note) return;
     var rect = canvas.getBoundingClientRect();
-    var lx = (ev.clientX - rect.left) / scale;
-    var ly = (ev.clientY - rect.top) / scale;
-    var n = findNote(lx, ly);
-    canvas.style.cursor = n ? 'help' : 'default';
-    showNote(n, ev.clientX, ev.clientY);
+    var n = findNote((ev.clientX - rect.left) / scale, (ev.clientY - rect.top) / scale);
+
+    if (n !== activeNote) {
+      activeNote = n;
+      if (n) {
+        note.querySelector('strong').textContent = n.title;
+        note.querySelector('span').textContent = n.body;
+        var pathEl = note.querySelector('.note-path');
+        if (pathEl) {
+          pathEl.textContent = n.path || '';
+          pathEl.style.display = n.path ? 'block' : 'none';
+        }
+        measureNote(); // once per content change, never per move
+      }
+      note.dataset.show = n ? 'true' : 'false';
+    }
+
+    if (n) {
+      var appearing = !noteShown;
+      noteShown = true;
+      aimNote(ev.clientX, ev.clientY);
+      // Snap on first appearance (never fly in from a stale spot), and
+      // whenever the animation loop isn't there to do the smoothing.
+      if (appearing || !running) {
+        noteX = noteTX;
+        noteY = noteTY;
+        paintNote();
+      }
+    } else {
+      noteShown = false;
+    }
   }
 
   canvas.addEventListener('pointermove', onPointer);
   canvas.addEventListener('pointerdown', onPointer);
-  canvas.addEventListener('pointerleave', function () { showNote(null); });
+  canvas.addEventListener('pointerleave', function () {
+    activeNote = null;
+    noteShown = false;
+    if (note) note.dataset.show = 'false';
+  });
 
   /* ---- main loop -------------------------------------------------------- */
 
-  var raf = 0, start = 0, running = false;
+  var raf = 0, start = 0, prevNow = 0, running = false;
 
   function frame(now) {
     if (!start) start = now;
@@ -802,6 +867,10 @@
       buildCycle(20260829 + cycleIndex);
     }
     render(t);
+    // The hover card shares this clock: one smoothing step per frame, capped
+    // so a dropped frame can't produce a visible jump.
+    tickNote(Math.min(prevNow ? now - prevNow : 16, 48));
+    prevNow = now;
     raf = requestAnimationFrame(frame);
   }
 
@@ -821,6 +890,7 @@
 
   function pause() {
     running = false;
+    prevNow = 0;
     cancelAnimationFrame(raf);
   }
 

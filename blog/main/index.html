@@ -115,8 +115,15 @@
       font-family: var(--serif);
     }
 
-    /* Iowan is a touch small on the body at Distill's default sizes. */
-    d-article { font-size: 1.12rem; }
+    d-article { font-size: 1rem; }
+
+    /* Headings a step down from the template's 36/20px, so they sit under the
+       38px title rather than competing with it. Same specificity as the
+       template's rules, so they win on document order. */
+    @media (min-width: 1024px) {
+      d-article h2 { font-size: 30px; }
+      d-article h3 { font-size: 18px; }
+    }
 
     /* Title: centred, and a size down from the template's 40/50px. Same
        specificity as the template's rule, so it wins on document order. */
@@ -180,9 +187,8 @@
       padding: 0.2rem 0 0.2rem var(--toc-text);
       border: none;
       line-height: 1.4;
-      font-family: var(--mono);
-      font-size: 12px;
-      text-transform: lowercase;
+      font-family: var(--serif);
+      font-size: 14px;
       color: rgba(0, 0, 0, 0.5);
       text-decoration: none;
       transition: color 0.25s ease;
@@ -267,12 +273,16 @@
         align-self: start;
         position: sticky;
         top: 1.5rem;
+        /* border-box, or `width: 100%` measures the grid band and the padding
+           is then added on top -- pushing the box past screen-start and
+           clipping the first character of every entry between ~1000-1350px. */
+        box-sizing: border-box;
         width: 100%;
         max-width: 260px;
         max-height: calc(100vh - 3rem);
         overflow-y: auto;
         margin-bottom: 0;
-        padding: 0 1.5rem 0 0;
+        padding: 0 1.5rem 0 1rem;
         border-bottom: none;
         border-right: 1px solid rgba(0, 0, 0, 0.1);
       }
@@ -315,6 +325,11 @@
 
     #hero-pipeline .hero-note {
       position: absolute;
+      /* Anchored at the origin and moved purely by transform: translate3d,
+         set from the animation loop — compositor-only, no layout work, so
+         the card's motion can't stutter against the canvas. */
+      left: 0;
+      top: 0;
       z-index: 3;
       max-width: min(280px, calc(100% - 24px));
       padding: 9px 12px;
@@ -324,11 +339,11 @@
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10);
       pointer-events: none;
       opacity: 0;
-      transform: translateY(3px);
-      transition: opacity 120ms ease, transform 120ms ease;
+      will-change: transform;
+      transition: opacity 140ms ease;
     }
 
-    #hero-pipeline .hero-note[data-show="true"] { opacity: 1; transform: translateY(0); }
+    #hero-pipeline .hero-note[data-show="true"] { opacity: 1; }
 
     #hero-pipeline .hero-note strong {
       display: block;
@@ -436,7 +451,7 @@
     <d-toc></d-toc>
 
     <a class="marker" href="#section-1"><span>1</span></a>
-    <h2 id="section-1">Section heading</h2>
+    <h2 id="section-1">section heading</h2>
     <p>Body text goes here. Distill lays the article out on a named grid, so most content sits in the
       <code>text</code> column while figures can opt into wider columns.</p>
 
@@ -447,7 +462,7 @@
       figure or any block element.</p>
 
     <a class="marker" href="#section-1.1"><span>1.1</span></a>
-    <h3 id="section-1.1">Math</h3>
+    <h3 id="section-1.1">math</h3>
     <p>Inline math with the element form: <d-math>c = a^2 + b^2</d-math>. Or with the <code>$$</code>
       delimiters configured in the front matter: $$x^2$$. Block math:</p>
 
@@ -456,7 +471,7 @@
     </d-math>
 
     <a class="marker" href="#section-1.2"><span>1.2</span></a>
-    <h3 id="section-1.2">Citations and footnotes</h3>
+    <h3 id="section-1.2">citations and footnotes</h3>
     <p>Cite one source<d-cite key="mercier2011humans"></d-cite>, or several at once<d-cite
         key="gregor2015draw,openai2018charter"></d-cite>. Keys come from
       <code>bibliography.bib</code>, which is loaded by the <code>&lt;d-bibliography&gt;</code> tag in the
@@ -465,7 +480,7 @@
           key="gregor2015draw"></d-cite>.</d-footnote> work the same way.</p>
 
     <a class="marker" href="#section-2"><span>2</span></a>
-    <h2 id="section-2">Code</h2>
+    <h2 id="section-2">code</h2>
     <p>Inline code: <d-code language="python">mask = torch.triu(ones, diagonal=1)</d-code>. And a block:</p>
 
     <d-code block language="python">
@@ -477,7 +492,7 @@
     </d-code>
 
     <a class="marker" href="#section-3"><span>3</span></a>
-    <h2 id="section-3">Tables and figures</h2>
+    <h2 id="section-3">tables and figures</h2>
 
     <table>
       <thead>

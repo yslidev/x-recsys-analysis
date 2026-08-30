@@ -43,3 +43,6 @@ data/
 *.npz
 *.pt
 *.safetensors
+
+
+blog/inspo/
