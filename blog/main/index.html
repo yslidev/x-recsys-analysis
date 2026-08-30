@@ -158,6 +158,76 @@
       d-title h1 { font-size: 38px; }
     }
 
+    /* Centred author line + date under the title, replacing the template's
+       byline grid (the <d-byline> tag stays in the document, hidden below). */
+    d-title .title-byline {
+      grid-column: text;    /* d-title lays children on the article grid */
+      text-align: center;
+      margin: 1.4rem 0 0.5rem;
+    }
+
+    d-title .title-byline p { margin: 0; }
+
+    d-title .title-byline .authors {
+      font-size: 18px;
+      color: rgba(0, 0, 0, 0.8);
+    }
+
+    d-title .title-byline .date {
+      margin-top: 0.5rem;
+      font-size: 15px;
+      color: rgba(0, 0, 0, 0.45);
+    }
+
+    d-byline { display: none; }
+
+    /* --- Page entrance ----------------------------------------------------
+       A whisper of motion on load. The top matter fades up 5px, lightly
+       staggered; the article, appendix and footer fade in with NO delay and
+       NO transform — a refresh anywhere in the page gets the same instant,
+       gentle arrival, and while a transform animates on d-article its sticky
+       TOC would come unstuck, so those blocks change opacity only. The h1 is
+       injected by the d-title component at runtime, so its animation simply
+       starts when it appears. */
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    @keyframes rise-in {
+      from { opacity: 0; transform: translateY(5px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    d-title h1,
+    d-title .title-byline,
+    d-title #hero-pipeline,
+    d-title > p {
+      animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    d-title .title-byline { animation-delay: 100ms; }
+    d-title #hero-pipeline { animation-delay: 200ms; }
+    d-title > p { animation-delay: 300ms; }
+
+    d-article,
+    d-appendix,
+    distill-footer {
+      animation: fade-in 0.5s ease-out both;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      d-title h1,
+      d-title .title-byline,
+      d-title #hero-pipeline,
+      d-title > p,
+      d-article,
+      d-appendix,
+      distill-footer {
+        animation: none;
+      }
+    }
+
     code, pre, kbd, samp,
     d-code, d-code * {
       font-family: var(--mono);
@@ -315,9 +385,12 @@
     /* Anchor jumps land with the heading clear of the viewport edge. */
     d-article h2, d-article h3 { scroll-margin-top: 2rem; }
 
-    html { scroll-behavior: smooth; }
+    /* Smooth scrolling is enabled from a script AFTER load: with it set
+       unconditionally, the browser also animates its scroll RESTORATION, so
+       refreshing mid-article lands at the top and visibly glides back down. */
+    html.smooth-scroll { scroll-behavior: smooth; }
     @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
+      html.smooth-scroll { scroll-behavior: auto; }
       d-article > d-toc a,
       d-article > d-toc .toc-indicator { transition: none; }
     }
@@ -426,6 +499,11 @@
       "published": "Aug 29, 2026",
       "authors": [
         {
+          "author": "Yushan Li",
+          "authorURL": "https://example.com/",
+          "affiliations": [{"name": "UC Berkeley", "url": "https://berkeley.edu"}]
+        },
+        {
           "author": "Idhant Gulati",
           "authorURL": "https://example.com/",
           "affiliations": [{"name": "UC Berkeley", "url": "https://berkeley.edu"}]
@@ -444,6 +522,14 @@
   </d-front-matter>
 
   <d-title>
+    <!-- Centred byline under the title; the stock <d-byline> grid below is
+         hidden in CSS but kept so the render transform stays happy and the
+         front-matter authors still feed metadata and citations. -->
+    <div class="title-byline">
+      <p class="authors">Yushan Li and Idhant Gulati</p>
+      <p class="date">Aug 29, 2026</p>
+    </div>
+
     <figure id="hero-pipeline"
         role="img"
         aria-label="An animated diagram of X's For You pipeline. A request pulse travels from the feed
@@ -1018,6 +1104,18 @@
   </d-appendix>
 
   <distill-footer></distill-footer>
+
+  <script>
+    // Smooth scrolling is class-gated (see the html.smooth-scroll rule) and
+    // switched on only after load: enabled from the start, the browser also
+    // animates its scroll restoration, so refreshing mid-article would glide
+    // down from the top instead of landing instantly.
+    window.addEventListener('load', function () {
+      requestAnimationFrame(function () {
+        document.documentElement.classList.add('smooth-scroll');
+      });
+    });
+  </script>
 
   <script src="assets/hero.js" defer></script>
 
