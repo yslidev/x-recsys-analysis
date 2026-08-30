@@ -34,14 +34,19 @@
   /* ---- palette ---------------------------------------------------------- */
 
   var C = {
-    ink:     '#1b1b1b',
-    muted:   'rgba(0,0,0,0.55)',
-    faint:   'rgba(0,0,0,0.30)',
-    hair:    'rgba(0,0,0,0.14)',
-    thunder: '#5f8fb4',   // in-network
-    phoenix: '#d1764a',   // model retrieval
-    simclus: '#6f9c6f',   // communities
-    mixer:   '#997fb8',   // tweet-mixer
+    // ysli.dev palette. Teal family = sources you already have a relationship
+    // with; the site's orange accent is reserved for the model path, which is
+    // the thing the article is actually about.
+    ink:     '#111111',                  // --foreground
+    muted:   'rgba(17,17,17,0.55)',
+    faint:   'rgba(17,17,17,0.30)',
+    hair:    'rgba(164,218,222,0.55)',   // the .superlink hairline
+    // Three steps down the teal ramp, spaced far enough apart to stay
+    // separable at dot size; the accent orange carries the model path.
+    thunder: '#0f5f7d',   // in-network      — teal-dark, deepened
+    phoenix: '#f97316',   // model retrieval — --accent
+    simclus: '#8fd9de',   // communities     — --teal, lightened
+    mixer:   '#2596be',   // tweet-mixer     — --teal-deep
     ad:      '#c9a227',
     paper:   '#ffffff'
   };
@@ -597,7 +602,7 @@
     }
 
     // Skeleton text lines.
-    ctx.fillStyle = kind === 'post' ? 'rgba(0,0,0,0.13)' : 'rgba(0,0,0,0.09)';
+    ctx.fillStyle = kind === 'post' ? 'rgba(37,150,190,0.15)' : 'rgba(17,17,17,0.09)';
     ctx.fillRect(rect.x + 26, cy - 6, lineW, 4);
     ctx.fillRect(rect.x + 26, cy + 2, lineW * 0.62, 4);
 
