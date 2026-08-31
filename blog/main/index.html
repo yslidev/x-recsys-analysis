@@ -796,6 +796,54 @@
     }
     .tag-key { grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr)); }
 
+
+    /* --- Semantic ID figure (assets/sid-figure.js) ------------------------- */
+    #sid-figure { grid-column: text-start / page-end; margin: 2rem 0 1.5rem; }
+    #sid-figure .sid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
+      gap: clamp(1rem, 2.5vw, 1.75rem);
+      align-items: start;
+    }
+    #sid-figure .sid-plot svg {
+      width: 100%; max-width: 300px; height: auto;
+      border: 1px solid var(--rule); border-radius: 6px; background: #fff;
+    }
+    #sid-figure .sid-axis {
+      font-family: var(--mono); font-size: 9px; fill: rgba(17,17,17,0.45);
+    }
+    #sid-figure .sid-code {
+      display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 12px;
+    }
+    #sid-figure .sid-byte {
+      min-width: 2.6rem; text-align: center; padding: 5px 7px;
+      font-family: var(--mono); font-size: 12px;
+      border: 1px solid var(--rule); border-radius: 4px;
+      color: rgba(17,17,17,0.3); background: var(--wash);
+      transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+    }
+    #sid-figure .sid-byte-on {
+      color: var(--teal-dark); border-color: var(--border); background: #fff; font-weight: 700;
+    }
+    #sid-figure .sid-read {
+      font-size: 13px; line-height: 1.6; color: rgba(17,17,17,0.7); min-height: 5.6em;
+    }
+    #sid-figure .sid-read b { color: var(--foreground); font-weight: 600; }
+    #sid-figure .sid-controls { display: flex; gap: 8px; }
+    #sid-figure .sid-controls button {
+      font-family: var(--mono); font-size: 11px; border-radius: 999px;
+      padding: 4px 13px; cursor: pointer; border: 1px solid var(--border);
+      background: none; color: var(--teal-dark);
+    }
+    #sid-figure .sid-step {
+      background: var(--teal-dark) !important; border-color: var(--teal-dark) !important;
+      color: #fff !important;
+    }
+    #sid-figure .sid-step:disabled { opacity: 0.45; cursor: default; }
+    @media (prefers-reduced-motion: reduce) {
+      #sid-figure .sid-byte { transition: none; }
+    }
+
     /* --- Figure house style ------------------------------------------------
        Borrowed from the Chameleon and Thinking Machines pieces in inspo/:
        a declarative title, a subtitle saying what one mark means and in what
@@ -1378,6 +1426,8 @@
 
 <p>This is the most novel thing in this release, and the part a recommender system reader will find the most directly useful. If you are an engineer working in recommenders, you might also find this quite interesting.</p>
 <p>This is exactly the process of how a post becomes six tokens: rather than represent a post by an opaque embedding, the Phoenix retrieval path quantizes embeddings into semantic IDs (six levels of 256 centroids each, produced by a residual quantized k-means). The training loop is about 200 readable lines: fit centroids at level one, subtract to get the residual, refit the next level&#x27;s centroids on that residual, and repeat six times (in phoenix/reference/sid_codebook.py).</p>
+
+<d-figure id="sid-figure"></d-figure>
 <p>There are three reasons why this is really important:</p>
 <p>It uses k-means, not a learned VAE. Semantic IDs are usually associated with the RQ-VAE approach, which requires auxiliary training and careful handling of codebook collapse. This does the same job with a clustering algorithm and no extra model. If you have been putting off adding semantic IDs because of the training overhead, that objection just got weaker.</p>
 <p>The address space is enormous, and the representation is tiny. 256 raised to the power of 6 is roughly 2.8 × 10^14 addressable items, in just 6 tokens per post.</p>
@@ -1490,6 +1540,7 @@
   <script src="assets/visibility-figure.js" defer></script>
   <script src="assets/phoenix-figure.js" defer></script>
   <script src="assets/labelloop-figure.js" defer></script>
+  <script src="assets/sid-figure.js" defer></script>
 
   <script>
     // --- Fonts inside shadow roots -----------------------------------------
