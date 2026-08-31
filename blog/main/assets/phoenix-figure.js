@@ -51,8 +51,10 @@
       <span><i style="background:${C.extra}"></i>allowed only with the mask off</span>
     </div>
     <div class="px-wrap">
-      <svg class="px-grid" role="img"
-           aria-label="Attention mask over a sequence of you, your history, and candidate posts"></svg>
+      <div class="px-grid-scroll">
+        <svg class="px-grid" role="img"
+             aria-label="Attention mask over a sequence of you, your history, and candidate posts"></svg>
+      </div>
       <div class="px-side">
         <button class="px-toggle" type="button"></button>
         <p class="px-read"></p>

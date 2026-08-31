@@ -732,6 +732,51 @@
       color: rgba(17,17,17,0.45);
     }
 
+
+    /* --- Narrow screens -----------------------------------------------------
+       The hero and the attention grid are drawn at a fixed logical size, so
+       squeezing them into 375px renders their mono labels at ~4px. Diagrams
+       that cannot reflow get a horizontal scroll container and keep a legible
+       minimum width instead -- the page never scrolls sideways, the figure
+       does. Everything that CAN reflow (chips, dials, rule ticks) already
+       does. */
+    @media (max-width: 700px) {
+      d-title h1 { font-size: 26px; line-height: 1.12em; }
+
+      #hero-pipeline,
+      #phoenix-figure .px-grid-scroll,
+      #visibility-figure .vf-cols {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+      }
+      #hero-pipeline canvas { min-width: 660px; }
+      #phoenix-figure .px-grid { min-width: 330px; }
+
+      /* two columns of rule ticks stay side by side: the whole point is
+         comparing them, so they scroll together rather than stacking */
+      #visibility-figure .vf-cols {
+        grid-template-columns: minmax(260px, 1fr) minmax(260px, 1fr);
+        gap: 16px;
+      }
+
+      /* the scrollbar sits on the container's bottom edge, which is right on
+         top of the figcaption -- give it its own room */
+      #hero-pipeline,
+      #phoenix-figure .px-grid-scroll,
+      #visibility-figure .vf-cols { padding-bottom: 10px; }
+
+      .tag-key { grid-template-columns: 1fr; gap: 2px; }
+      #weights-figure .wf-chip { font-size: 11px; }
+      #labelloop-figure .ll { gap: 18px; }
+      d-article { font-size: 1rem; }
+    }
+
+    @media (max-width: 420px) {
+      d-title h1 { font-size: 23px; }
+      #weights-figure .wf-dial { grid-template-columns: 6.5rem 1fr 2.9rem; gap: 7px; }
+    }
+
     /* --- Figure house style ------------------------------------------------
        Borrowed from the Chameleon and Thinking Machines pieces in inspo/:
        a declarative title, a subtitle saying what one mark means and in what
