@@ -1,0 +1,139 @@
+{
+  "source": "xai-org/x-algorithm home-mixer/params/param.rs",
+  "commit": "5e40600",
+  "commit_date": "2026-08-28",
+  "positive_sum": 43.344,
+  "negative_sum": -367.22,
+  "weights": [
+    {
+      "param": "ShareViaCopyLinkWeight",
+      "label": "Share via copy link",
+      "weight": 20.0
+    },
+    {
+      "param": "ReplyWeight",
+      "label": "Reply",
+      "weight": 5.0
+    },
+    {
+      "param": "ShareViaDmWeight",
+      "label": "Share via DM",
+      "weight": 5.0
+    },
+    {
+      "param": "QuoteWeight",
+      "label": "Quote",
+      "weight": 5.0
+    },
+    {
+      "param": "FollowAuthorWeight",
+      "label": "Follow author",
+      "weight": 4.0
+    },
+    {
+      "param": "ShareWeight",
+      "label": "Share",
+      "weight": 2.0
+    },
+    {
+      "param": "RetweetWeight",
+      "label": "Repost",
+      "weight": 1.0
+    },
+    {
+      "param": "FavoriteWeight",
+      "label": "Like",
+      "weight": 0.5
+    },
+    {
+      "param": "ClickWeight",
+      "label": "Click",
+      "weight": 0.4
+    },
+    {
+      "param": "OpenLinkWeight",
+      "label": "Open link",
+      "weight": 0.2
+    },
+    {
+      "param": "VideoOpenWeight",
+      "label": "Video open",
+      "weight": 0.07
+    },
+    {
+      "param": "PhotoExpandWeight",
+      "label": "Photo expand",
+      "weight": 0.05
+    },
+    {
+      "param": "QuotedClickWeight",
+      "label": "Quoted click",
+      "weight": 0.05
+    },
+    {
+      "param": "DwellWeight",
+      "label": "Dwell",
+      "weight": 0.05
+    },
+    {
+      "param": "PostUnexploredWeight",
+      "label": "Post unexplored",
+      "weight": 0.02
+    },
+    {
+      "param": "ContDwellTimeWeight",
+      "label": "Continuous dwell time",
+      "weight": 0.004
+    },
+    {
+      "param": "ProfileClickWeight",
+      "label": "Profile click",
+      "weight": 0.0
+    },
+    {
+      "param": "VqvWeight",
+      "label": "Video quality view",
+      "weight": 0.0
+    },
+    {
+      "param": "QuotedVqvWeight",
+      "label": "Quoted video quality view",
+      "weight": 0.0
+    },
+    {
+      "param": "ContClickDwellTimeWeight",
+      "label": "Continuous click dwell time",
+      "weight": 0.0
+    },
+    {
+      "param": "ContActiveSecs5mResidualNormWeight",
+      "label": "Active seconds (5m residual)",
+      "weight": 0.0
+    },
+    {
+      "param": "NotDwelledWeight",
+      "label": "Did not dwell",
+      "weight": -0.02
+    },
+    {
+      "param": "BlockAuthorWeight",
+      "label": "Block author",
+      "weight": -31.2
+    },
+    {
+      "param": "NotInterestedWeight",
+      "label": "Not interested",
+      "weight": -43.2
+    },
+    {
+      "param": "MuteAuthorWeight",
+      "label": "Mute author",
+      "weight": -58.8
+    },
+    {
+      "param": "ReportWeight",
+      "label": "Report",
+      "weight": -234.0
+    }
+  ]
+}

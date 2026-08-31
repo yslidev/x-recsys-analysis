@@ -43,10 +43,10 @@
     hair:    'rgba(164,218,222,0.55)',   // the .superlink hairline
     // Three steps down the teal ramp, spaced far enough apart to stay
     // separable at dot size; the accent orange carries the model path.
-    thunder: '#0f5f7d',   // in-network      — teal-dark, deepened
-    phoenix: '#f97316',   // model retrieval — --accent
-    simclus: '#8fd9de',   // communities     — --teal, lightened
-    mixer:   '#2596be',   // tweet-mixer     — --teal-deep
+    thunder: '#0f5f7d',   // in-network: teal-dark, deepened
+    phoenix: '#f97316',   // model retrieval: --accent
+    simclus: '#8fd9de',   // communities: --teal, lightened
+    mixer:   '#2596be',   // tweet-mixer: --teal-deep
     ad:      '#c9a227',
     paper:   '#ffffff'
   };
@@ -101,11 +101,11 @@
     { t: 0,     n: '01', name: 'A request arrives',
       sub: 'before any post is fetched, 17 parallel lookups build a picture of you' },
     { t: 3000,  n: '02', name: 'Candidate sourcing',
-      sub: 'four recall paths return 3,000–4,000 post ids — just ids, nothing more' },
+      sub: 'four recall paths return 3,000–4,000 post ids, just ids, nothing more' },
     { t: 4900,  n: '03', name: 'Hydration', gate: 'hydrate',
       sub: '12 parallel lookups fill each id in: text, author, media, counts' },
     { t: 6000,  n: '04', name: 'Filtering', gate: 'filter',
-      sub: '18 sequential checks — seen it, blocked, muted, too old — thin the pool' },
+      sub: '18 sequential checks, seen it, blocked, muted, too old, thin the pool' },
     { t: 6800,  n: '05', name: 'Scoring', gate: 'score',
       sub: 'phoenix predicts your reactions; 26 fixed weights fold them into one score' },
     { t: 7700,  n: '06', name: 'Diversity & cut', gate: 'diversify',
@@ -113,7 +113,7 @@
     { t: 8600,  n: '07', name: 'Visibility & blending', gate: 'visibility',
       sub: 'per-viewer safety rules run last; ads and modules slot into fixed positions' },
     { t: 11200, n: '08', name: '35 posts served',
-      sub: 'the feed ships — and a sample is logged to train tomorrow’s model' }
+      sub: 'the feed ships, and a sample is logged to train tomorrow’s model' }
   ];
 
   // Times for the count labels; recomputed with the phases.
@@ -136,7 +136,7 @@
 
   var NOTES = [
     { rect: [28, 84, 200, 74], title: 'Viewer context',
-      body: 'Query hydrators fetch who you follow, block and mute, what you have been shown, and your recent action sequence — the model’s picture of you.',
+      body: 'Query hydrators fetch who you follow, block and mute, what you have been shown, and your recent action sequence, the model’s picture of you.',
       path: 'home-mixer/query_hydrators/' },
     { rect: [28, 148, 190, 60], title: 'Thunder · in-network',
       body: 'Every post from people you follow, from the last 48 hours, held in RAM in reverse-chronological order. No ML at this stage.',
@@ -145,19 +145,19 @@
       body: 'A learned retrieval model picks out-of-network posts it predicts you will engage with, addressing posts by semantic IDs.',
       path: 'phoenix/ · phoenix-rankall/' },
     { rect: [28, 308, 190, 60], title: 'SimClusters',
-      body: 'Posts surfacing from ~145k communities detected by factorizing the follow graph — a 2020-era method still in the mix.',
+      body: 'Posts surfacing from ~145k communities detected by factorizing the follow graph, a 2020-era method still in the mix.',
       path: 'simclusters/' },
     { rect: [28, 388, 190, 60], title: 'TweetMixer',
       body: 'An additional recall service contributing graph-based candidate paths.',
       path: 'home-mixer/sources/tweet_mixer_source.rs' },
     { rect: [222, 150, 152, 275], title: '3,000–4,000 candidates',
-      body: 'The sources return only post IDs — hollow dots here. Everything after this narrows the pool down.',
+      body: 'The sources return only post IDs, hollow dots here. Everything after this narrows the pool down.',
       path: 'home-mixer/sources/' },
     { rect: [374, 130, 81, 320], title: 'Candidate hydration',
       body: '12 parallel lookups fill each ID in: text, media, author, language, engagement counts. Hollow ids become solid posts.',
       path: 'home-mixer/candidate_hydrators/' },
     { rect: [455, 130, 114, 320], title: '18 sequential filters',
-      body: 'Older than 48 h, already seen, your own posts, blocked or muted authors, muted keywords, NSFW rules — most of the pool dies here.',
+      body: 'Older than 48 h, already seen, your own posts, blocked or muted authors, muted keywords, NSFW rules, most of the pool dies here.',
       path: 'home-mixer/filters/' },
     { rect: [569, 130, 114, 320], title: 'Phoenix scoring',
       body: 'One transformer pass predicts P(like), P(reply), P(report)… per post; 26 fixed weights fold them into a single score.',
@@ -166,16 +166,16 @@
       body: 'A MAP-DPP pass trades raw score for dissimilarity, then only the top 50 survive (TOP_K_CANDIDATES_TO_SELECT).',
       path: 'vm-ranker/dpp.rs' },
     { rect: [796, 130, 92, 320], title: 'Visibility filtering',
-      body: 'Per-viewer safety rules decide allow, interstitial, or drop — the only stage that can make a post vanish for you.',
+      body: 'Per-viewer safety rules decide allow, interstitial, or drop, the only stage that can make a post vanish for you.',
       path: 'visibility-filtering/' },
     { rect: [800, 32, 110, 76], title: 'The other half',
-      body: 'Safety labels are written continuously by a separate offline pipeline. The two halves never call each other — they only meet in these stores.',
+      body: 'Safety labels are written continuously by a separate offline pipeline. The two halves never call each other, they only meet in these stores.',
       path: 'grox/ · agatha/ · botmaker/ · scarecrow/' },
     { rect: [640, 495, 290, 70], title: 'The training loop',
       body: 'A sample of every served top-50 is logged with the exact weights used. Today’s feed is tomorrow’s training data.',
       path: 'home-mixer/side_effects/ · phoenix/xrex/' },
     { rect: [FEED.x, FEED.y, FEED.w, FEED.h], title: 'Your For You feed',
-      body: '35 posts (RESULT_SIZE), blended with ads and a who-to-follow module at fixed positions, marshalled and sent back — in well under a second.',
+      body: '35 posts (RESULT_SIZE), blended with ads and a who-to-follow module at fixed positions, marshalled and sent back, in well under a second.',
       path: 'home-mixer/params/config.rs · selectors/' }
   ];
 
@@ -345,7 +345,7 @@
         y: lerp(pathY(d, stop, t), r.y + r.h / 2, k)
       };
     }
-    // Every other fate is a removal: the dot pops — it freezes at its death
+    // Every other fate is a removal: the dot pops, it freezes at its death
     // point, shrinks and fades while a ring expands from the same centre.
     // The wobble is evaluated at the death instant so the pop holds still.
     var POP = 340;
@@ -433,7 +433,7 @@
     });
 
     // Label stores: the offline half of the system, feeding VISIBILITY.
-    // A database icon — top ellipse, two seams, straight sides.
+    // A database icon, top ellipse, two seams, straight sides.
     var sx = STORES.x, sy = STORES.y;
     ctx.strokeStyle = C.faint;
     ctx.lineWidth = 1;
@@ -763,10 +763,10 @@
   /* The card follows the pointer on the same clock as the canvas: pointer
      moves only update a target; the main animation loop eases the card toward
      it with frame-rate-independent exponential smoothing and paints it via
-     transform: translate3d (compositor-only — no layout, no jitter). The
+     transform: translate3d (compositor-only, no layout, no jitter). The
      card's size is cached when its content changes, so pointer moves never
      force layout. When the loop isn't running (reduced motion), the card
-     tracks the pointer directly. The cursor is left alone — no `help`
+     tracks the pointer directly. The cursor is left alone, no `help`
      question mark. */
 
   var note = figure.querySelector('.hero-note');
@@ -907,7 +907,7 @@
   }
 
   // Resetting the canvas size wipes it, so repaint the last frame after any
-  // resize — the animation loop would catch up anyway, but static and frozen
+  // resize, the animation loop would catch up anyway, but static and frozen
   // frames (reduced motion, __heroRender) would otherwise stay blank.
   if ('ResizeObserver' in window) {
     new ResizeObserver(function () {

@@ -44,5 +44,8 @@ data/
 *.pt
 *.safetensors
 
-
+# ---- Design reference ----
+# Saved third-party articles (Distill, Anthropic, Thinking Machines, ...) kept
+# locally for design study: ~144MB of other people's content. Never committed.
+inspo/
 blog/inspo/

@@ -1,3 +1,3 @@
-[submodule "blog/blog/template"]
-	path = blog/blog/template
+[submodule "blog/template"]
+	path = blog/template
 	url = https://github.com/distillpub/template

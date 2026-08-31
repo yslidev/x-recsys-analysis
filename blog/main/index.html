@@ -210,10 +210,15 @@
     d-title #hero-pipeline { animation-delay: 200ms; }
     d-title > p { animation-delay: 300ms; }
 
+    /* `both` also applies the from-state BEFORE the animation starts, so the
+       article sits at opacity 0 until styles resolve and the animation is
+       scheduled. On a 5,700-word page that is a visible flash of blank
+       content, and a screenshot taken during it shows an empty column.
+       `forwards` keeps the fade but never hides content ahead of it. */
     d-article,
     d-appendix,
     distill-footer {
-      animation: fade-in 0.5s ease-out both;
+      animation: fade-in 0.5s ease-out forwards;
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -227,6 +232,23 @@
         animation: none;
       }
     }
+
+    /* Berkeley Mono runs optically larger than Iowan at the same nominal size,
+       so inline code is stepped down to sit level with the prose around it.
+       Without this, a line of param names reads as a heading. */
+    d-article p > code,
+    d-article li > code,
+    d-article aside code,
+    d-article figcaption code { font-size: 0.85em; }
+
+    /* Reference data attached to the value-model figure: the modifiers that
+       are not action weights. Sits at caption scale, like the figcaption. */
+    #weights-extras {
+      font-size: 0.8rem;
+      line-height: 1.7;
+      color: rgba(17, 17, 17, 0.6);
+    }
+    #weights-extras code { font-size: 0.92em; color: var(--teal-dark); }
 
     code, pre, kbd, samp,
     d-code, d-code * {
@@ -383,6 +405,358 @@
     }
 
     /* Anchor jumps land with the heading clear of the viewport edge. */
+    /* --- Distill site footer -----------------------------------------------
+       The component renders distill.pub's own chrome: their logo, "Distill is
+       dedicated to clear explanations of machine learning", and links to their
+       About/Submit/Prize/Archive/RSS. That's their masthead, and this article
+       isn't published there, so it's hidden.
+
+       Note this can't be done the way the header is. `distill-prerendered`
+       only short-circuits connectedCallback, and shadow-DOM components append
+       their template in the *constructor* — so the attribute skips ShadyCSS
+       styling but the footer still renders. The tag itself stays put so
+       `make render` doesn't decide one is missing and insert a fresh one.
+       The <d-appendix> above is the article's real footer. */
+
+    /* --- Value-model figure (assets/weights-figure.js) ---------------------
+       Two panels: the weights as readable chips, then the arithmetic as a
+       waterfall. Wider than the text column so 26 chips wrap sensibly. */
+    #weights-figure { grid-column: text-start / page-end; margin: 2rem 0 1.5rem; }
+    #weights-figure .wf-panel {
+      border-top: 1px solid var(--rule); padding-top: 10px; margin-top: 14px;
+    }
+    #weights-figure .wf-panel-head {
+      font-family: var(--mono); font-size: 10px; letter-spacing: 0.07em;
+       color: var(--teal-dark); margin-bottom: 10px;
+    }
+    #weights-figure .wf-panel-head i { font-style: italic; text-transform: none; }
+
+    /* Panel A -- the weights */
+    #weights-figure .wf-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    #weights-figure .wf-chip {
+      display: inline-flex; align-items: baseline; gap: 6px;
+      padding: 3px 9px; border-radius: 999px;
+      border: 1px solid color-mix(in srgb, var(--c) 45%, transparent);
+      background: color-mix(in srgb, var(--c) calc(var(--a) * 16%), transparent);
+      font-size: 11.5px; line-height: 1.35; white-space: nowrap;
+    }
+    #weights-figure .wf-chip b { font-weight: 400; color: rgba(17,17,17,0.82); }
+    #weights-figure .wf-chip em {
+      font-family: var(--mono); font-style: normal; font-size: 10.5px;
+      color: var(--c); font-weight: 700;
+    }
+    #weights-figure .wf-chip-stale { border-style: dashed; background: none; }
+
+    /* Panel B -- the arithmetic */
+    #weights-figure .wf-dial {
+      display: grid; grid-template-columns: 10.5rem 1fr 3.4rem 4.4rem;
+      align-items: center; gap: 10px; margin-bottom: 4px; font-size: 13px;
+    }
+    #weights-figure .wf-dial-name { color: rgba(17,17,17,0.8); }
+    #weights-figure .wf-dial input { width: 100%; accent-color: var(--teal-deep); }
+    #weights-figure .wf-dial-p,
+    #weights-figure .wf-dial-w { font-family: var(--mono); font-size: 11px; text-align: right; }
+    #weights-figure .wf-dial-p { color: rgba(17,17,17,0.75); }
+    #weights-figure .wf-dial-w { color: rgba(17,17,17,0.38); }
+
+    #weights-figure .wf-fall { display: block; width: 100%; margin-top: 10px; }
+    #weights-figure .wf-fall rect { transition: x 0.25s ease, width 0.25s ease; }
+    #weights-figure .wf-tick {
+      font-family: var(--mono); font-size: 9.5px; fill: rgba(17,17,17,0.45);
+    }
+    #weights-figure .wf-score {
+      margin-top: 6px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+    }
+    #weights-figure .wf-score-lab {
+      font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em;
+       color: rgba(17,17,17,0.45);
+    }
+    #weights-figure .wf-score-val  { font-family: var(--mono); font-size: 19px; font-weight: 700; }
+    #weights-figure .wf-score-note { font-size: 13px; color: rgba(17,17,17,0.55); }
+    #weights-figure figcaption { margin-top: 1.1rem; }
+
+    @media (max-width: 700px) {
+      #weights-figure .wf-dial { grid-template-columns: 8.5rem 1fr 3.2rem; }
+      #weights-figure .wf-dial-w { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #weights-figure .wf-fall rect { transition: none; }
+    }
+
+    /* --- Visibility figure (assets/visibility-figure.js) -------------------
+       Two rule lists scanned side by side. The columns must animate at the
+       same time -- the point is that the two scans are identical until one
+       simply keeps going. */
+    #visibility-figure { grid-column: text-start / page-end; margin: 2rem 0 1.5rem; }
+    #visibility-figure .vf-chips {
+      display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;
+      padding-bottom: 12px; border-bottom: 1px solid var(--rule);
+    }
+    #visibility-figure .vf-chip {
+      font-family: var(--mono); font-size: 11px; color: var(--teal-dark);
+      background: none; border: 1px solid var(--border); border-radius: 999px;
+      padding: 3px 11px; cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+    #visibility-figure .vf-chip:hover { background: var(--wash); }
+    #visibility-figure .vf-chip[aria-pressed="true"] {
+      background: var(--teal-dark); border-color: var(--teal-dark); color: #fff;
+    }
+
+    #visibility-figure .vf-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+    #visibility-figure .vf-col { display: grid; grid-template-rows: auto auto auto auto; align-content: start; }
+    #visibility-figure .vf-col-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      gap: 8px; margin-bottom: 8px;
+    }
+    #visibility-figure .vf-who { font-size: 14px; color: var(--foreground); }
+    #visibility-figure .vf-level { font-family: var(--mono); font-size: 9.5px; color: rgba(17,17,17,0.4); }
+
+    /* the rule list: one tick per rule, in evaluation order */
+    #visibility-figure .vf-scan {
+      display: flex; flex-wrap: wrap; gap: 2px; align-content: flex-start;
+      min-height: 34px; margin-bottom: 12px;
+    }
+    #visibility-figure .vf-tick {
+      width: 7px; height: 14px; border-radius: 1px;
+      background: rgba(164,218,222,0.30);
+      transition: background 0.18s ease, transform 0.18s ease;
+    }
+    /* the 26 appended rules read as a distinct block even before the scan */
+    #visibility-figure .vf-tick-oon { background: rgba(249,115,22,0.14); }
+    #visibility-figure .vf-ran      { background: rgba(17,17,17,0.16); }
+    #visibility-figure .vf-hit-inter { background: #c9a227; transform: scaleY(1.5); }
+    #visibility-figure .vf-hit-drop  { background: #f97316; transform: scaleY(1.5); }
+
+    #visibility-figure .vf-post {
+      border: 1px solid var(--border); border-radius: 6px; background: #fff;
+      padding: 10px; position: relative; overflow: hidden;
+      transition: opacity 0.4s ease, max-height 0.4s ease, padding 0.4s ease,
+                  margin 0.4s ease, border-width 0.4s ease;
+      max-height: 90px;
+    }
+    #visibility-figure .vf-lines { display: flex; flex-direction: column; gap: 6px; }
+    #visibility-figure .vf-lines i {
+      display: block; height: 7px; border-radius: 3px; background: rgba(37,150,190,0.30);
+    }
+    #visibility-figure .vf-veil {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.72); backdrop-filter: blur(4px);
+      font-size: 10.5px; color: var(--teal-dark);
+      opacity: 0; transition: opacity 0.4s ease; pointer-events: none;
+    }
+    #visibility-figure .vf-col[data-verdict="inter"] .vf-lines { filter: blur(3.5px); }
+    #visibility-figure .vf-col[data-verdict="inter"] .vf-veil  { opacity: 1; }
+    #visibility-figure .vf-col[data-verdict="drop"] .vf-post {
+      opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0;
+      border-width: 0; margin-bottom: 0;
+    }
+
+    #visibility-figure .vf-verdict {
+      display: flex; align-items: baseline; gap: 8px; margin-top: 9px; min-height: 1.3em;
+    }
+    #visibility-figure .vf-word {
+      font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    }
+    #visibility-figure .vf-rule {
+      font-family: var(--mono); font-size: 9.5px; color: rgba(17,17,17,0.45); word-break: break-all;
+    }
+    #visibility-figure .vf-note {
+      margin-top: 16px; padding-top: 10px; border-top: 1px solid var(--rule);
+      font-size: 13.5px; line-height: 1.6; color: rgba(17,17,17,0.7); min-height: 3.2em;
+    }
+    @media (max-width: 640px) {
+      #visibility-figure .vf-cols { grid-template-columns: 1fr; gap: 20px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #visibility-figure .vf-tick, #visibility-figure .vf-post,
+      #visibility-figure .vf-veil { transition: none; }
+    }
+
+
+    /* --- Phoenix attention figure (assets/phoenix-figure.js) --------------- */
+    #phoenix-figure { grid-column: text-start / page-end; margin: 2rem 0 1.5rem; }
+    #phoenix-figure .px-wrap {
+      display: grid; grid-template-columns: minmax(240px, 360px) 1fr; gap: 24px;
+      align-items: start;
+    }
+    #phoenix-figure .px-grid { max-width: 360px; }
+    #phoenix-figure .px-cell { transition: opacity 0.15s ease, fill 0.15s ease; }
+    #phoenix-figure .px-toggle {
+      font-family: var(--mono); font-size: 11px; color: var(--accent);
+      background: none; border: 1px solid var(--border); border-radius: 999px;
+      padding: 3px 11px; cursor: pointer;
+    }
+    #phoenix-figure .px-toggle:hover { background: var(--wash); }
+    #phoenix-figure .px-read {
+      margin-top: 12px; font-size: 13px; line-height: 1.6; color: rgba(17,17,17,0.7);
+      min-height: 5em;
+    }
+    #phoenix-figure .px-read b { color: var(--foreground); font-weight: 600; }
+    @media (max-width: 700px) {
+      #phoenix-figure .px-wrap { grid-template-columns: 1fr; }
+    }
+
+    /* --- Label loop figure (assets/labelloop-figure.js) -------------------- */
+    #labelloop-figure { grid-column: text-start / page-end; margin: 2rem 0 1.5rem; }
+    #labelloop-figure .ll {
+      display: grid; grid-template-columns: minmax(220px, 300px) 1fr; gap: 28px;
+      align-items: start;
+    }
+    #labelloop-figure .ll-stage {
+      display: grid; grid-template-columns: 12px 1fr; gap: 8px;
+      align-items: baseline; font-size: 12.5px; color: rgba(17,17,17,0.45);
+      transition: color 0.2s ease;
+    }
+    #labelloop-figure .ll-stage.ll-on { color: var(--foreground); }
+    #labelloop-figure .ll-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: rgba(164,218,222,0.6);
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+    #labelloop-figure .ll-stage.ll-on .ll-dot { background: var(--accent); transform: scale(1.5); }
+    #labelloop-figure .ll-arrow {
+      grid-column: 1; font-size: 10px; color: rgba(164,218,222,0.8); line-height: 1.1;
+    }
+    #labelloop-figure .ll-return {
+      font-family: var(--mono); font-size: 9.5px; color: rgba(17,17,17,0.35);
+      margin-top: 6px;
+    }
+
+    #labelloop-figure .ll-col-head {
+      font-family: var(--mono); font-size: 10px; letter-spacing: 0.07em;
+       color: var(--teal-dark); margin-bottom: 10px;
+    }
+    #labelloop-figure .ll-account {
+      /* a status chip, not a form field: full width read as an empty input */
+      display: inline-flex; align-items: baseline; gap: 10px;
+      border: 1px solid var(--border); border-radius: 6px;
+      padding: 8px 12px; margin-bottom: 12px;
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+    #labelloop-figure .ll-account[data-labelled="true"] {
+      background: rgba(201,162,39,0.10); border-color: #c9a227;
+    }
+    #labelloop-figure .ll-acc-name { font-size: 13.5px; color: var(--foreground); }
+    #labelloop-figure .ll-acc-tag {
+      font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em;
+       color: rgba(17,17,17,0.45);
+    }
+    #labelloop-figure .ll-account[data-labelled="true"] .ll-acc-tag { color: #a07d12; }
+
+    #labelloop-figure .ll-posts {
+      display: flex; flex-wrap: wrap; gap: 4px; min-height: 34px; margin-bottom: 12px;
+    }
+    #labelloop-figure .ll-post {
+      width: 15px; height: 15px; border-radius: 3px;
+      background: rgba(37,150,190,0.35);
+      animation: llPop 0.3s cubic-bezier(0.16,1,0.3,1);
+      transition: background 0.3s ease;
+    }
+    #labelloop-figure .ll-post-flagged { background: #f97316; }
+    @keyframes llPop { from { transform: scale(0.4); opacity: 0 } to { transform: none; opacity: 1 } }
+
+    #labelloop-figure .ll-controls { display: flex; gap: 8px; }
+    #labelloop-figure .ll-controls button {
+      font-family: var(--mono); font-size: 11px; border-radius: 999px;
+      padding: 4px 13px; cursor: pointer; border: 1px solid var(--border);
+      background: none; color: var(--teal-dark);
+    }
+    #labelloop-figure .ll-go {
+      background: var(--teal-dark) !important; border-color: var(--teal-dark) !important;
+      color: #fff !important;
+    }
+    #labelloop-figure .ll-controls button:hover { opacity: 0.85; }
+    #labelloop-figure .ll-read {
+      margin-top: 12px; font-size: 13px; line-height: 1.6;
+      color: rgba(17,17,17,0.7); min-height: 3.6em;
+    }
+    @media (max-width: 700px) { #labelloop-figure .ll { grid-template-columns: 1fr; } }
+    @media (prefers-reduced-motion: reduce) {
+      #labelloop-figure .ll-post { animation: none; }
+      #labelloop-figure .ll-dot, #labelloop-figure .ll-stage { transition: none; }
+    }
+
+
+    /* --- Article-wide tag key ----------------------------------------------
+       Sits in the text column, not the margin: five entries with glosses will
+       not wrap sensibly in a ~180px gutter, and putting it there also left a
+       tall hole beside the one-line provenance note. Margin asides stay for
+       the short per-section file paths, which is what they fit. */
+    .tag-key {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 3px 22px; margin: 0 0 1.6rem;
+      padding: 12px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+    }
+    .tag-key .tk-row { display: flex; align-items: baseline; gap: 8px; }
+    .tag-key code {
+      font-family: var(--mono); font-size: 10px; color: var(--teal-dark);
+      border: 1px solid var(--border); border-radius: 999px;
+      padding: 1px 7px; white-space: nowrap;
+    }
+    .tag-key i {
+      font-style: normal; font-size: 12.5px; color: rgba(17,17,17,0.6); line-height: 1.4;
+    }
+
+    /* Figures span text-start..page-end, never `page`. At >=1000px the grid
+       puts page-start two columns LEFT of text-start, and the docked <d-toc>
+       occupies screen-start..text-start -- so `grid-column: page` lands a
+       figure on top of the sidebar. This gains the extra width on the right,
+       where there is nothing to collide with. */
+
+
+    /* --- Site footer -------------------------------------------------------
+       Hiding Distill's own footer left the page terminating in bare white,
+       with nothing to say it had ended. This is the replacement: ysli.dev's
+       palette, a way back to the site, and the repo. */
+    .site-footer {
+      margin-top: 3rem; padding: 2rem 0 2.5rem;
+      border-top: 1px solid var(--border);
+      background: var(--wash);
+    }
+    .site-footer .sf-inner {
+      max-width: 704px; margin: 0 auto; padding: 0 1rem;
+      display: flex; flex-wrap: wrap; gap: 10px 26px;
+      align-items: baseline; justify-content: space-between;
+    }
+    .site-footer a {
+      color: var(--foreground); text-decoration: none;
+      border-bottom: 1px solid #bbb;
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    .site-footer a:hover { color: var(--accent); border-color: var(--accent); }
+    .site-footer .sf-links {
+      display: flex; gap: 18px; font-size: 13px;
+    }
+    .site-footer .sf-meta {
+      font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.04em;
+      color: rgba(17,17,17,0.45);
+    }
+
+    /* --- Figure house style ------------------------------------------------
+       Borrowed from the Chameleon and Thinking Machines pieces in inspo/:
+       a declarative title, a subtitle saying what one mark means and in what
+       units, and a legend that decodes the marks. The figcaption is then free
+       to carry provenance and argument rather than instructions. */
+    .fig-title {
+      font-size: 15px; font-weight: 600; color: var(--foreground);
+      margin: 0 0 3px; letter-spacing: -0.005em;
+    }
+    .fig-subtitle {
+      font-size: 12.5px; line-height: 1.5; color: rgba(17,17,17,0.55);
+      margin: 0 0 12px; max-width: 62ch;
+    }
+    .fig-legend {
+      display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0 0 12px;
+      font-family: var(--mono); font-size: 10px; letter-spacing: 0.04em;
+      color: rgba(17,17,17,0.6);
+    }
+    .fig-legend span { display: inline-flex; align-items: center; gap: 5px; }
+    .fig-legend i {
+      width: 11px; height: 11px; border-radius: 2px; display: inline-block;
+    }
+
+    distill-footer { display: none; }
+
     d-article h2, d-article h3 { scroll-margin-top: 2rem; }
 
     /* Smooth scrolling is enabled from a script AFTER load: with it set
@@ -419,7 +793,7 @@
     #hero-pipeline .hero-note {
       position: absolute;
       /* Anchored at the origin and moved purely by transform: translate3d,
-         set from the animation loop — compositor-only, no layout work, so
+         set from the animation loop, compositor-only, no layout work, so
          the card's motion can't stutter against the canvas. */
       left: 0;
       top: 0;
@@ -533,7 +907,7 @@
     <figure id="hero-pipeline"
         role="img"
         aria-label="An animated diagram of X's For You pipeline. A request pulse travels from the feed
-          back to four candidate sources — Thunder, Phoenix, SimClusters and TweetMixer — which emit a
+          back to four candidate sources, Thunder, Phoenix, SimClusters and TweetMixer, which emit a
           stream of dots representing posts. The dots pass through five gates (hydrate, filter, score,
           diversify, visibility); most are removed along the way, and the roughly ten survivors dock
           into a small For You feed panel alongside an ad and a who-to-follow module.">
@@ -542,7 +916,7 @@
       <figcaption>
         One request through the pipeline: candidates stream from four sources, are hydrated, filtered,
         scored, diversified, and checked for visibility; the top 50 become the ~35 posts you see.
-        Dot counts are illustrative — the numbers are the code's own.<span class="pointer-hint">
+        Dot counts are illustrative, the numbers are the code's own.<span class="pointer-hint">
         Hover a stage for what it does.</span>
       </figcaption>
     </figure>
@@ -560,64 +934,61 @@
          Styling and the scroll-spy that drives .active are at the bottom of this file. -->
     <d-toc></d-toc>
 
-<aside><strong>Rating key:</strong> <strong>Need ★</strong> how much you need it to follow the system · <strong>Fun ★</strong> how interesting if you're just curious.<br><strong>Tags:</strong> <code>[reach]</code> why your post travelled or didn't · <code>[shadowban]</code> how content gets hidden · <code>[eng]</code> implementation detail · <code>[recsys]</code> for people who build recommenders · <code>[policy]</code> a value judgment encoded in code</aside>
-
-<p><em>Code references verified against <code>xai-org/x-algorithm</code> @ <code>5e40600</code> (upstream <code>bc8e5f0</code>), 28 Aug 2026.</em></p>
+<div class="tag-key"><span class="tk-row"><code>[reach]</code><i>why your post travelled or didn't</i></span><span class="tk-row"><code>[shadowban]</code><i>how content gets hidden</i></span><span class="tk-row"><code>[eng]</code><i>implementation detail</i></span><span class="tk-row"><code>[recsys]</code><i>for people who build recommenders</i></span><span class="tk-row"><code>[policy]</code><i>a value judgment encoded in code</i></span></div>
 
 <a class="marker" href="#introduction"><span>1</span></a>
 
 <h2 id="introduction">Introduction</h2>
 
-<p>The X engineering team open-sourced a much larger portion of their recommendation system earlier this month — the third update since the original release in January, and by far the biggest. Both of us were invited to review the code with the team before it went public.</p>
-<p>We&#x27;ve spent the last few weeks reading it, running it, and arguing about it, and we had more fun than we expected to. We think you will too — and not only if you build recommender systems. If you just use the platform and have ever wondered why one post got 10,000 views and a near-identical one got 200, the answer is in here somewhere.</p>
+<p>The X engineering team open-sourced a much larger portion of their recommendation system earlier this month, the third update since the original release in January, and by far the biggest. Both of us were invited to review the code with the team before it went public.</p>
+<p>We&#x27;ve spent the last few weeks reading it, running it, and arguing about it, and we had more fun than we expected to. We think you will too, and not only if you build recommender systems. If you just use the platform and have ever wondered why one post got 10,000 views and a near-identical one got 200, the answer is in here somewhere.</p>
 <p>Two notes before we start. We assume you have some technical background and the patience for something longer than a thread; in exchange, we&#x27;ll try to make it more interesting than a lecture. And everything here we read, traced, and where we could, ran ourselves.</p>
-<p>As for why you&#x27;d read this instead of just cloning the repo: the code is organized the way software is organized — by service, by module, by team. It is not organized the way the system actually <em>runs</em>. So that&#x27;s what we&#x27;ve done here instead. One post, from the moment it&#x27;s published to the moment it lands in someone&#x27;s feed, in the order the machine actually touches it.</p>
+<p>As for why you&#x27;d read this instead of just cloning the repo: the code is organized the way software is organized, by service, by module, by team. It is not organized the way the system actually <em>runs</em>. So that&#x27;s what we&#x27;ve done here instead. One post, from the moment it&#x27;s published to the moment it lands in someone&#x27;s feed, in the order the machine actually touches it.</p>
 
 <a class="marker" href="#part-1-six-verbs"><span>2</span></a>
 
-<h2 id="part-1-six-verbs">Part 1 — Six verbs</h2>
+<h2 id="part-1-six-verbs">Part 1: Six verbs</h2>
 
-<p><code>candidate-pipeline/</code></p>
-<p><strong>Need ★★★★★ · Fun ★★★☆☆</strong> <code>[eng]</code></p>
+<aside><code>candidate-pipeline/</code> <code>[eng]</code></aside>
 <p>Every stage you are about to walk through is an instance of the same small set: go fetch things (source), fill things in (hydrator), throw things out (filter), put a number on things (scorer), sort and cut (selector), do something afterward (side effect).</p>
 
-<a class="marker" href="#part-2-b-fyp"><span>3</span></a>
+<a class="marker" href="#part-2-for-you"><span>3</span></a>
 
-<h2 id="part-2-b-fyp">Part 2 — B. fyp</h2>
+<h2 id="part-2-for-you">Part 2: The For You request</h2>
 
 <p>In Section B, we&#x27;ll go through the For You page. When a user opens a request, when the user opens a For You page, within hundreds of milliseconds, this is what happens</p>
 
-<a class="marker" href="#b1"><span>3.1</span></a>
+<a class="marker" href="#query-builder"><span>3.1</span></a>
 
-<h3 id="b1">B1 · The request arrives</h3>
+<h3 id="query-builder">The request arrives</h3>
 
-<p class="section-meta"><code>home-mixer/</code> QueryBuilder — viewer data, opt-outs, cursors <strong>Need ★★★☆☆ · Fun ★☆☆☆☆</strong> <code>[eng]</code></p>
+<aside><code>home-mixer/ QueryBuilder</code> <code>[eng]</code></aside>
 
 <p>This is where the whole For You page gets initialized when a user enters the app by signaling the home-mixer api for the timeline curation / generation for a given validated viewer_id. A For You gRPC request hits get_for_you_feed_urt. Before any posts or ads are fetched, QueryBuilder::build turns that request into a ScoredPostsQuery.</p>
 
-<a class="marker" href="#b2"><span>3.2</span></a>
+<a class="marker" href="#foryou-pipeline"><span>3.2</span></a>
 
-<h3 id="b2">B2 · Everything that isn&#x27;t a post</h3>
+<h3 id="foryou-pipeline">Everything that isn't a post</h3>
 
-<p class="section-meta"><code>ForYouCandidatePipeline</code> — 7 parallel sources, one wraps the post pipeline <strong>Need ★★★☆☆ · Fun ★★☆☆☆</strong> <code>[eng]</code></p>
+<aside><code>ForYouCandidatePipeline</code> <code>[eng]</code></aside>
 
 <p>So then, the section decides what appears on the timeline besides posts. These seven sources listed below run in parallel, each contributing to a different type of item.</p>
 <ul>
-<li>Posts themselves. Sourced via ScoredPostsSource</li>
-<li>Ads, - AdsSource</li>
-<li>who to follow (wtf), WhoToFollowSource</li>
-<li>prompt [An onboarding / product UI injection (inline prompt, full/half cover, relevance prompt)], PromptsSource</li>
-<li>push to home [a notification-driven post pinned at the top (plus top repliers)] PushToHomeSource</li>
-<li>Jetfuel frames [topic timeline carousel cards (soccer / NFL / MLB, etc.)] JetfuelFrameSource</li>
-<li>Feed surveys - in-feed survey card asking for feedback about the timeline FeedSurveySource</li>
+<li>Posts themselves</li>
+<li>Ads</li>
+<li>Who to follow</li>
+<li>Prompts, the onboarding and product UI injections: inline prompts, full or half covers, relevance prompts</li>
+<li>Push to home, a notification-driven post pinned at the top, plus its top repliers</li>
+<li>Jetfuel frames, the topic timeline carousel cards for soccer, NFL, MLB and the like</li>
+<li>Feed surveys, an in-feed card asking for feedback about the timeline</li>
 </ul>
 
-<a class="marker" href="#b3"><span>3.3</span></a>
+<a class="marker" href="#query-hydrators"><span>3.3</span></a>
 
-<h3 id="b3">B3 · The system looks you up</h3>
+<h3 id="query-hydrators">The system looks you up</h3>
 
-<p>17 hydrators, in parallel — <code>home-mixer/query_hydrators/</code> <strong>Need ★★★★★ · Fun ★★★★☆</strong> <code>[eng]</code> <code>[reach]</code></p>
-<p>At B3, we look you up before looking at any post. There are 17 parallel lookups, all about the user:</p>
+<aside><code>home-mixer/query_hydrators/</code> <code>[eng]</code> <code>[reach]</code></aside>
+<p>We look you up before looking at any post. There are 17 parallel lookups, all about the user:</p>
 <ul>
 <li>Who you follow</li>
 <li>Who you blocked</li>
@@ -633,11 +1004,11 @@
 <li>User action sequence fetched twice at ranking and retrieval shapes</li>
 </ul>
 
-<a class="marker" href="#b4"><span>3.4</span></a>
+<a class="marker" href="#sources"><span>3.4</span></a>
 
-<h3 id="b4">B4 · Where the posts come from</h3>
+<h3 id="sources">Where the posts come from</h3>
 
-<p>Thunder · Phoenix retrieval · SimClusters ANN · TweetMixer · cached-posts fast path — <code>home-mixer/sources/</code> <strong>Need ★★★★★ · Fun ★★★★☆</strong> <code>[reach]</code> <code>[recsys]</code></p>
+<aside><code>home-mixer/sources/</code> <code>[reach]</code> <code>[recsys]</code></aside>
 <p>Once we get enough understanding about the user, we try to go into several sources, including:</p>
 <ul>
 <li>Recent posts from people that you follow</li>
@@ -645,22 +1016,22 @@
 <li>Posts from communities that you resemble (in a couple of variants)</li>
 </ul>
 <p>This results in a wide, personalized pool of around 3,000 to 4,000 posts that will be hybrid-filtered and scored at a later stage. Right now, however, they are just ID numbers of posts we think you will be interested in.</p>
-<p>If (3) found ≥ 500 cached posts, has_cached_posts = true and the request takes a genuinely different code path: only CachedPostsSource enables, all six live recall sources disable themselves, and many downstream hydrators plus PhoenixScorer itself skip too (cached posts carry their stored scores). It&#x27;s a reuse mechanism for pagination/refresh, not a seventh recall algorithm.</p>
+<p>If (3) found ≥ 500 cached posts, has_cached_posts = true and the request takes a genuinely different code path: only the cached-posts source enables, all six live recall sources disable themselves, and many downstream hydrators plus <a href="#phoenix">PhoenixScorer</a> itself skip too (cached posts carry their stored scores). It&#x27;s a reuse mechanism for pagination/refresh, not a seventh recall algorithm.</p>
 
-<a class="marker" href="#b5"><span>3.5</span></a>
+<a class="marker" href="#candidate-hydrators"><span>3.5</span></a>
 
-<h3 id="b5">B5 · The system looks <em>them</em> up</h3>
+<h3 id="candidate-hydrators">The system looks <em>them</em> up</h3>
 
-<p>12 hydrators — <code>home-mixer/candidate_hydrators/</code> <strong>Need ★★★★☆ · Fun ★★★☆☆</strong> <code>[eng]</code></p>
-<p>InNetworkCandidateHydrator · BidirectionalFollowHydrator · core post data · QuoteHydrator · MediaInfoHydrator · SubscriptionHydrator · GizmoduckCandidateHydrator (author data) · BlockedByHydrator · FilteredTopicsHydrator · LanguageCodeHydrator · EngagementCountsHydrator · SemanticIdHydrator</p>
+<aside><code>home-mixer/candidate_hydrators/</code> <code>[eng]</code></aside>
+<p>in-network flag · mutual-follow flag · core post data · quoted post · media · subscription status · author data · blocks in both directions · filtered topics · language · engagement counts · semantic ID</p>
 <p>Now you get a huge list of IDs, but what are they? What really are those posts? It&#x27;s like stock; it&#x27;s just paper money. The IDs are really useless on their own.</p>
 <p>Twelve more parallel lookups fill each in: the text, the media, the person who posted it, the language, basically the content. This process is what we call the &quot;hydrator.&quot;</p>
 
-<a class="marker" href="#b6"><span>3.6</span></a>
+<a class="marker" href="#filters"><span>3.6</span></a>
 
-<h3 id="b6">B6 · Eighteen ways to get cut</h3>
+<h3 id="filters">Eighteen ways to get cut</h3>
 
-<p>18 filters, sequential — <code>home-mixer/filters/</code> <strong>Need ★★★★☆ · Fun ★★★★☆</strong> <code>[reach]</code></p>
+<aside><code>home-mixer/filters/</code> <code>[reach]</code></aside>
 <p>Filters here for the obvious notes: there are 18 checks in order.</p>
 <p>The actual execution order is:</p>
 <ol>
@@ -669,7 +1040,7 @@
 <li>Age less than 48 hours</li>
 <li>Not your own post</li>
 <li>OON retweet reply</li>
-<li>OONNsfwSimclustersFilter (NSFW / SimClusters)</li>
+<li>Out-of-network adult content, judged by community</li>
 <li>User to retweet dedupe</li>
 <li>Subscription eligible</li>
 <li>Previously seen</li>
@@ -678,25 +1049,27 @@
 <li>Your muted keywords</li>
 <li>Block and mute in both directions</li>
 <li>Brazil 2026 election</li>
-<li>VideoFilter</li>
-<li>TopicIdsFilter</li>
+<li>Video</li>
+<li>Topics</li>
 <li>New user minimum engagement</li>
 <li>Inventory holdout</li>
 </ol>
 <p>There are a few interesting filters at this stage:</p>
-<p>First is the 48-hour ceiling: the max post age is 48 hours, which matches the retention system. The two independent systems basically agree on the same number, meaning the feed supply window is two days. After that, a post is not just suppressed, it completely ages out of the candidate pool.</p>
+<p>First is the 48-hour ceiling: the max post age is 48 hours, which matches <a href="#thunder">the retention system</a>. The two independent systems basically agree on the same number, meaning the feed supply window is two days. After that, a post is not just suppressed, it completely ages out of the candidate pool.</p>
 <p>Then there is the hardcoded legal filter on the Brazil 2026 election, which includes a fixed list of accounts excluded from recommendations, with the Brazilian electoral court&#x27;s statutory language quoted directly in the source comment, which I think is pretty interesting.</p>
 
-<a class="marker" href="#b7"><span>3.7</span></a>
+<a class="marker" href="#phoenix"><span>3.7</span></a>
 
-<h3 id="b7">B7 · The only stage that judges you</h3>
+<h3 id="phoenix">The only stage that judges you</h3>
 
-<p class="section-meta"><code>phoenix/</code> serving + model — candidate isolation, hash embeddings <strong>Need ★★★★★ · Fun ★★★★★</strong> <code>[eng]</code> <code>[recsys]</code></p>
+<aside><code>phoenix/</code> <code>[eng]</code> <code>[recsys]</code></aside>
 
 <p>Read user hash embedding</p>
 <p>Now we are finally onto AI.</p>
 <p>Basically, in one pass, it is fed: this is this person, this is their last 1,024 actions, and here are 3,000 posts. For each post, it returns a set of probabilities: that the user may like it (12% chance), reply (1%), share (2%), or report it (0.01%). So the AI here, which is the Phoenix architecture, predicts the behavior. Again, nothing is ranked; just the behavior is predicted.</p>
-<p>Stage B7 makes a judgment about the user. Surviving candidates go to Phoenix in a single request carrying your action sequence and the post. It looks like: you, your history, candidate 1, candidate 2, through candidate N. An attention mask lets each candidate attend to you and your history, but never to another candidate, enforced inside the attention kernel rather than masked afterward.</p>
+<p>This stage makes a judgment about the user. Surviving candidates go to Phoenix in a single request carrying your action sequence and the post. It looks like: you, your history, candidate 1, candidate 2, through candidate N. An attention mask lets each candidate attend to you and your history, but never to another candidate, enforced inside the attention kernel rather than masked afterward.</p>
+
+<d-figure id="phoenix-figure"></d-figure>
 <p>This constraint buys three things:</p>
 <ol>
 <li>Scoring N posts costs one pass instead of N, since the expensive history computation is shared.</li>
@@ -705,212 +1078,129 @@
 </ol>
 <p>There are two small details to reinforce:</p>
 <p>Your history is right-anchored (the newest event always sits at the same position), and every candidate is pinned to the same position encoding. The candidates have no order among themselves, not even implicitly.</p>
-<p>The cost is real: the model cannot reason about a set of posts. It cannot notice that two candidates are near-duplicates or that the top 10 are all from one person, which is why those problems must be filtered by stages B8, B9, and B11.</p>
+<p>The cost is real: the model cannot reason about a set of posts. It cannot notice that two candidates are near-duplicates or that the top 10 are all from one person, which is why those problems must be filtered downstream: by <a href="#scorers">the value model</a>, <a href="#vm-ranker">the diversity re-rank</a>, and <a href="#visibility-filtering">visibility filtering</a>.</p>
 <p>There is really no vocabulary anywhere; every ID is hashed twice into a shared table rather than looked up in an index. Memory is fixed no matter how large the platform grows. The price is that collisions are permanent and invisible: there is no row that belongs strictly to your post, only a bucket shared with others.</p>
 <p>Your learned user embedding is read as a row in the same hash table fitted during training. Nothing about it is interpretable, no axis means anything, and it is not uniquely yours. It is a small piece of personalization; that 1,024-event history carries far more signal than a single user vector.</p>
 
-<a class="marker" href="#b8"><span>3.8</span></a>
+<a class="marker" href="#scorers"><span>3.8</span></a>
 
-<h3 id="b8">B8 · Twenty-six numbers</h3>
+<h3 id="scorers">The value model</h3>
 
-<p class="section-meta"><code>RankingScorer</code> — weights, offset_score, cold-start / diversity / OON adjustments — <code>home-mixer/scorers/</code>, <code>params/param.rs</code> <strong>Need ★★★★★ · Fun ★★★★★</strong> <code>[policy]</code> <code>[reach]</code></p>
+<aside><code>home-mixer/scorers/, params/param.rs</code> <code>[policy]</code> <code>[reach]</code></aside>
 
 <d-math block>
 \text{score} = \sum_i w_i \cdot P(\text{action}_i \mid \text{viewer}, \text{post})
 </d-math>
 <p><em>The weights are global; personalization lives in the model.</em></p>
 <p>The weights are global, personalization lives within the model.</p>
-<p>Phoenix takes user action sequence [read at B3] (up to 1024 recent engagements) and learned user embeddings [read at B7] and predict P(action) - how likely would a user react (reply/ like/ share/ report) certain posts</p>
-<p>User graph &amp; state [read at B3] also used</p>
+<p><a href="#phoenix">Phoenix</a> takes user action sequence [read at <a href="#query-hydrators">query hydration</a>] (up to 1024 recent engagements) and learned user embeddings [read at <a href="#phoenix">the ranking model</a>] and predict P(action) - how likely would a user react (reply/ like/ share/ report) certain posts</p>
+<p>User graph &amp; state [read at <a href="#query-hydrators">query hydration</a>] also used</p>
 <p>Wi is the same set of global rules</p>
 <p>Weights here, or we call params, are the things here.</p>
 <p>System is steered away from attention maxing (but prompted with several policy question)</p>
-<p><strong>The 26 weights, at <code>5e40600</code>:</strong></p>
-<table>
-<thead><tr>
-<th>Action</th>
-<th>Weight</th>
-<th>Action</th>
-<th>Weight</th>
-</tr></thead><tbody>
-<tr>
-<td>ShareViaCopyLink</td>
-<td>20.0</td>
-<td>PostUnexplored</td>
-<td>0.02</td>
-</tr>
-<tr>
-<td>Reply</td>
-<td>5.0</td>
-<td>VideoOpen</td>
-<td>0.07</td>
-</tr>
-<tr>
-<td>ShareViaDm</td>
-<td>5.0</td>
-<td>PhotoExpand</td>
-<td>0.05</td>
-</tr>
-<tr>
-<td>Quote</td>
-<td>5.0</td>
-<td>QuotedClick</td>
-<td>0.05</td>
-</tr>
-<tr>
-<td>FollowAuthor</td>
-<td>4.0</td>
-<td><strong>Dwell</strong></td>
-<td><strong>0.05</strong></td>
-</tr>
-<tr>
-<td>Share</td>
-<td>2.0</td>
-<td>ContDwellTime</td>
-<td>0.004</td>
-</tr>
-<tr>
-<td>Retweet</td>
-<td>1.0</td>
-<td>ProfileClick</td>
-<td>0.0</td>
-</tr>
-<tr>
-<td>Favorite</td>
-<td>0.5</td>
-<td>Vqv</td>
-<td>0.0</td>
-</tr>
-<tr>
-<td>Click</td>
-<td>0.4</td>
-<td>QuotedVqv</td>
-<td>0.0</td>
-</tr>
-<tr>
-<td>OpenLink</td>
-<td>0.2</td>
-<td>ContClickDwellTime</td>
-<td>0.0</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-<td>ContActiveSecs5mResidualNorm</td>
-<td>0.0</td>
-</tr>
-<tr>
-<td>NotDwelled</td>
-<td>−0.02</td>
-<td>BlockAuthor</td>
-<td>−31.2</td>
-</tr>
-<tr>
-<td>NotInterested</td>
-<td>−43.2</td>
-<td>MuteAuthor</td>
-<td>−58.8</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-<td>Report</td>
-<td>−234.0</td>
-</tr>
-</tbody></table>
-<p>Positives +43.32 · Negatives −367.22. <code>BidirectionalFollowReplyWeightBoost</code> 15.0 · <code>BidirectionalFollowDwellWeightBoost</code> 0.0 <code>OonWeightFactor</code> 0.75 · <code>TopicOonWeightFactor</code> 0.5 · <code>AuthorDiversityDecay</code> 0.5 · <code>AuthorDiversityFloor</code> 0.25</p>
+<d-figure id="weights-figure"></d-figure>
+
+
+<p id="weights-extras">Alongside the 26: <code>BidirectionalFollowReplyWeightBoost</code> 15.0 · <code>BidirectionalFollowDwellWeightBoost</code> 0.0 <code>OonWeightFactor</code> 0.75 · <code>TopicOonWeightFactor</code> 0.5 · <code>AuthorDiversityDecay</code> 0.5 · <code>AuthorDiversityFloor</code> 0.25</p>
 <p><strong>Three of these changed during the August release window</strong> (13 → 28 Aug): <code>Vqv</code> 0.05 → 0.0, <code>VideoOpen</code> 0.05 → 0.07, and <code>Dwell</code> <strong>0.0 → 0.05</strong> in commit <code>0d3cdd8</code> on 25 Aug.</p>
 
+<!-- HIDDEN FOR NOW: policy / moral questions. Delete this comment pair
+     to bring the section back; nothing inside has been edited. -->
+<!--
 <a class="marker" href="#policy-moral-questions-raised-by-the-weights"><span>3.9</span></a>
 
 <h4 id="policy-moral-questions-raised-by-the-weights">Policy / moral questions raised by the weights</h4>
 
-<p>Report at −234 means content is buried for predicted offence, not actual offence. A 1% predicted report probability outweighs a certain like fivefold. Nobody has to report anything — resembling previously-reported content is sufficient. Who is over-represented in that training signal?</p>
-<p>Mute (−58.8) is penalised 1.9× harder than block (−31.2), inverting user intent. Block is the stronger action. Weighting by frequency rather than intensity would produce exactly this ordering — is that what happened, and is it intended?</p>
-<p>Reply at 10× favorite rewards disagreement. Replies skew argumentative; likes skew approving. The &quot;engagement means conflict&quot; critique now has a number attached — does weighting conversation 10× above approval systematically advantage contentious content?</p>
+<p>Report at −234 means content is buried for predicted offence, not actual offence. A 1% predicted report probability outweighs a certain like fivefold. Nobody has to report anything, resembling previously-reported content is sufficient. Who is over-represented in that training signal?</p>
+<p>Mute (−58.8) is penalised 1.9× harder than block (−31.2), inverting user intent. Block is the stronger action. Weighting by frequency rather than intensity would produce exactly this ordering, is that what happened, and is it intended?</p>
+<p>Reply at 10× favorite rewards disagreement. Replies skew argumentative; likes skew approving. The &quot;engagement means conflict&quot; critique now has a number attached, does weighting conversation 10× above approval systematically advantage contentious content?</p>
 <p>Copy-link share at 20 is the top signal, and it can&#x27;t tell admiration from outrage. Both get copied and sent. Is the most-rewarded action also the most outrage-correlated one?</p>
-<p>Dwell was 0.0 until 25 August — a real ethical choice, undercut by its own alternative. Declining to optimise attention time is genuinely creditable. But cont_dwell_time is 0.004, the gated dwell-regret model makes dwell the multiplicand of the entire score, and twelve days into this release dwell itself went to 0.05. Was the zero a commitment, or a headline number while some viewers get the opposite?</p>
-<p>Nothing in the formula refers to a post being true, accurate, or harmful. The only harm proxies are predicted reactions. The system has no concept of wrong — only of disliked. Everything normative is delegated to visibility filtering&#x27;s labels, which is a defensible architecture but should be said out loud.</p>
+<p>Dwell was 0.0 until 25 August, a real ethical choice, undercut by its own alternative. Declining to optimise attention time is genuinely creditable. But cont_dwell_time is 0.004, the gated dwell-regret model makes dwell the multiplicand of the entire score, and twelve days into this release dwell itself went to 0.05. Was the zero a commitment, or a headline number while some viewers get the opposite?</p>
+<p>Nothing in the formula refers to a post being true, accurate, or harmful. The only harm proxies are predicted reactions. The system has no concept of wrong, only of disliked. Everything normative is delegated to <a href="#visibility-filtering">visibility filtering&#x27;s</a> labels, which is a defensible architecture but should be said out loud.</p>
 <p>The two anti-concentration levers are both weak. OON at 0.75 and a diversity floor of 0.25 are the only structural counterweights, against a model free to output arbitrarily large probability gaps. Is the commitment to diversity real or nominal?</p>
-<p>The bidirectional boost aims a lever at the social graph, not content. +15 reply weight for mutual follows — 4× — advantages established reciprocal networks over new accounts. That&#x27;s a rich-get-richer mechanism, and it&#x27;s the one value X has documented as deliberately tuned twice — launched broadly at 20 on 13 July 2026, then lowered to 15 on 24 July.</p>
+<p>The bidirectional boost aims a lever at the social graph, not content. +15 reply weight for mutual follows, 4×, advantages established reciprocal networks over new accounts. That&#x27;s a rich-get-richer mechanism, and it&#x27;s the one value X has documented as deliberately tuned twice, launched broadly at 20 on 13 July 2026, then lowered to 15 on 24 July.</p>
 
-<a class="marker" href="#b9"><span>3.10</span></a>
 
-<h3 id="b9">B9 · The score gets overridden</h3>
+-->
 
-<p class="section-meta"><code>vm-ranker/</code> — greedy MAP-DPP <strong>Need ★★★★☆ · Fun ★★★★★</strong> <code>[recsys]</code> <code>[policy]</code></p>
+<a class="marker" href="#vm-ranker"><span>3.10</span></a>
 
-<p><em>(Moved up from the end of the document. Your own text says it runs before the top-50 selector, and B7 promises a B9.)</em></p>
+<h3 id="vm-ranker">The score gets overridden</h3>
+
+<aside><code>vm-ranker/</code> <code>[recsys]</code> <code>[policy]</code></aside>
+
 <p>The scored candidates then go through a separate service running greedy MAP-DPP (that is, the Determinantal Point Process), which picks a subset that is simultaneously high-quality and mutually dissimilar. Quality comes from the score just computed; dissimilarity comes from a cosine distance between post embeddings.</p>
 <p>Two things to focus on here:</p>
-<p>Unselected candidates get a score of zero. Because this runs before the top 50 selector, zeroing is functionally just dropping, and diversity is implemented as score suppression (the codebase&#x27;s general idiom for gating).</p>
-<p>It overrides everything upstream. VMRanker returns its own score for the posts that are selected, so the 26 weights are subject to replacement by a model whose parameters are not in the repository. That is an honest caveat on the entire scoring disclosure: you can read exactly how the linear value model works, yet a separate service gets the last word.</p>
+<p>Unselected candidates get a score of zero. Because this runs before <a href="#top-k-selector">the top-50 selector</a>, zeroing is functionally just dropping, and diversity is implemented as score suppression (the codebase&#x27;s general idiom for gating).</p>
+<p>It overrides everything upstream. VMRanker returns its own score for the posts that are selected, so the <a href="#scorers">26 weights</a> are subject to replacement by a model whose parameters are not in the repository. That is an honest caveat on the entire scoring disclosure: you can read exactly how the linear value model works, yet a separate service gets the last word.</p>
 <p>There is another really interesting detail that we noticed when reading the codebase: when a post embedding is missing, it is replaced by a random unit vector. To the diversity algorithm, this looks absolutely maximally diverse, so missing data is not really penalized here.</p>
 
-<a class="marker" href="#b10"><span>3.11</span></a>
+<a class="marker" href="#top-k-selector"><span>3.11</span></a>
 
-<h3 id="b10">B10 · Sort, and keep fifty</h3>
+<h3 id="top-k-selector">Sort, and keep fifty</h3>
 
-<p class="section-meta"><code>TopKScoreSelector</code> <strong>Need ★★☆☆☆ · Fun ★☆☆☆☆</strong> <code>[eng]</code></p>
+<aside><code>TopKScoreSelector</code> <code>[eng]</code></aside>
 
 <p>Sort by score and keep 50</p>
 
-<a class="marker" href="#b11"><span>3.12</span></a>
+<a class="marker" href="#visibility-filtering"><span>3.12</span></a>
 
-<h3 id="b11">B11 · Two questions, two realities</h3>
+<h3 id="visibility-filtering">Two questions, two realities</h3>
 
-<p class="section-meta"><code>visibility-filtering/</code> (+ client) — VFFilter / AncillaryVFFilter / conversation dedup <strong>Need ★★★★★ · Fun ★★★★★</strong> <code>[shadowban]</code></p>
+<aside><code>visibility-filtering/</code> <code>[shadowban]</code></aside>
 
 <p>This is the only stage that can make a post cease to exist for you. For each survivor, the safety system decides whether to show it, blur it behind a tap, or not show it at all. Everything before this only reorders and filters out.</p>
 <p>For each surviving post, HomeMixer asks visibility filtering a question that gets one of three answers: allow, interstitial, or drop. The rules evaluate in order: the first drop wins, and the name of the deciding rule becomes the telemetry.</p>
 <p>Very importantly, HomeMixer asks two different questions: one for in-network posts and one for recommendations. The difference between the two is really the mechanism people mean when they ask, &quot;Am I getting shadowbanned?&quot;</p>
 <p>The two rule sets share a base, but recommendations get an extra block of drop-only rules appended. Several signals appear with different verdicts: interstitial in-network, drop out-of-network. If you follow the author, the post is blurred and you can tap through; if you don&#x27;t, it simply isn&#x27;t seen. Same post, same label, same moment, but two different realities decided by whether you had already chosen to see the person.</p>
+
+<d-figure id="visibility-figure"></d-figure>
 <p>It fails open inside and fails closed on the edge. With visibility filtering, an outage in an upstream store resolves to no blocks and no mutes, so content flows. At the boundary, the default flips: an unresolved author is dropped, and any post ID missing from the response is backfilled by the client as a drop.</p>
 <p>Then, posts whose quoted posts or thread ancestors were vetoed are dropped too, and only the highest-scoring branch of any conversation survives.</p>
 
-<a class="marker" href="#b12"><span>3.13</span></a>
+<a class="marker" href="#selectors"><span>3.13</span></a>
 
-<h3 id="b12">B12 · Ads, prompts, and the slots they fill</h3>
+<h3 id="selectors">Ads, prompts, and the slots they fill</h3>
 
-<p>ads blender · Who-to-Follow · prompts · survey slots — <code>home-mixer/selectors/</code> <strong>Need ★★☆☆☆ · Fun ★★★☆☆</strong> <code>[eng]</code></p>
+<aside><code>home-mixer/selectors/</code> <code>[eng]</code></aside>
 <p>Blending basically spaces things out. Ads get spaced out, each with a safe neighbor:</p>
 <ul>
 <li>Who to follow at position 5</li>
 <li>A survey at position 11</li>
 <li>A rule that the feed should never end with an ad</li>
 </ul>
-<p>Structurally, ad placement is a separate, deterministic step applied after ranking finishes. So nothing in the 26 weights is about revenue, which is, I guess, really good.</p>
+<p>Structurally, ad placement is a separate, deterministic step applied after ranking finishes. So nothing in the <a href="#scorers">26 weights</a> is about revenue, which is, I guess, really good.</p>
 
-<a class="marker" href="#b13"><span>3.14</span></a>
+<a class="marker" href="#response-marshalling"><span>3.14</span></a>
 
-<h3 id="b13">B13 · Served — and written down</h3>
+<h3 id="response-marshalling">Served, and written down</h3>
 
-<p>response marshalling into a Thrift URT timeline <strong>Need ★★☆☆☆ · Fun ★★★☆☆</strong> <code>[eng]</code></p>
+<aside><code>Thrift URT marshalling</code> <code>[eng]</code></aside>
 <p>Then, after you already have your feed, it writes down what it did: a sample of the top 50 with the exact weights used, so tomorrow&#x27;s model can learn from today&#x27;s feed. And it caches the leftovers for your next scroll.</p>
-<p>The result is marshalled into a Thrift URT timeline — cursors, the new-posts pill, &quot;not interested&quot; feedback actions, conversation modules — and capped at 47 items (RESULT_SIZE(35) + FEED_MODULE_SLOTS(4) + MAX_JETFUEL_FRAMES_PER_RESPONSE(8); 38 is RANKED_FOLLOWING_MAX_RESULT_SIZE, a different surface).</p>
-<p>Then, without blocking the response, 17 side effects fire. Three matter enough to name in C4.</p>
+<p>The result is marshalled into a Thrift URT timeline, cursors, the new-posts pill, &quot;not interested&quot; feedback actions, conversation modules, and capped at 47 items (RESULT_SIZE(35) + FEED_MODULE_SLOTS(4) + MAX_JETFUEL_FRAMES_PER_RESPONSE(8); 38 is RANKED_FOLLOWING_MAX_RESULT_SIZE, a different surface).</p>
+<p>Then, without blocking the response, 17 side effects fire. Three matter enough to name in <a href="#feedback-loops">the feedback loops</a>.</p>
 
-<a class="marker" href="#part-3-a-labeling"><span>4</span></a>
+<a class="marker" href="#part-3-labeling"><span>4</span></a>
 
-<h2 id="part-3-a-labeling">Part 3 — A. labeling</h2>
+<h2 id="part-3-labeling">Part 3: The labeling path</h2>
 
-<h3 id="life-of-a-post">The life of a post — from publish to &quot;eligible candidate&quot; (continuous, off-request)</h3>
+<h3 id="life-of-a-post">The life of a post: from publish to &quot;eligible candidate&quot; (continuous, off-request)</h3>
 
-<a class="marker" href="#a1"><span>4.1</span></a>
+<a class="marker" href="#tweet-events"><span>4.1</span></a>
 
-<h3 id="a1">A1 · A post is published</h3>
+<h3 id="tweet-events">A post is published</h3>
 
-<p>Kafka <code>tweet_events</code> → content-understanding topics <strong>Need ★★★★☆ · Fun ★★★☆☆</strong> <code>[eng]</code></p>
+<aside><code>Kafka tweet_events</code> <code>[eng]</code></aside>
 <p>A post is created and immediately becomes an event on Kafka: tweet_events. From here, it takes two entirely separate journeys that never rejoin until someone&#x27;s feed is being built.</p>
-<p>The first journey is making it available (thunder A2) . It goes into a memory store so that people who follow the author can be served it within milliseconds.</p>
-<p>The second makes it understood (grox A3). A battery of models and rules decide what the post is and whether it&#x27;s allowed to travel, and publishes its own set of content-understanding topics.</p>
+<p>The first journey is making it available (<a href="#thunder">Thunder</a>) . It goes into a memory store so that people who follow the author can be served it within milliseconds.</p>
+<p>The second makes it understood (<a href="#grox">Grox</a>). A battery of models and rules decide what the post is and whether it&#x27;s allowed to travel, and publishes its own set of content-understanding topics.</p>
 <p>Neither journey knows about the other. This separation is the single most important structural fact in the system. It is why we get questions like &quot;Why was I ranked so low?&quot; or &quot;Why did my post disappear?&quot; All of those questions are actually about these two different machines.</p>
 
-<a class="marker" href="#a2"><span>4.2</span></a>
+<a class="marker" href="#thunder"><span>4.2</span></a>
 
-<h3 id="a2">A2 · Making it fetchable</h3>
+<h3 id="thunder">Making it fetchable</h3>
 
-<p class="section-meta"><code>thunder/</code> — feeder → in-memory author index <strong>Need ★★★★☆ · Fun ★★★★☆</strong> <code>[eng]</code></p>
+<aside><code>thunder/</code> <code>[eng]</code></aside>
 
 <p>Thunder is written in Rust. It holds every post on the platform under 48 hours old entirely in RAM, indexed by author.</p>
 <p>The architecture is straightforward:</p>
@@ -923,28 +1213,28 @@
 <ul>
 <li>Retention is 48 hours.</li>
 <li>Sorting is purely reverse chronological.</li>
-<li>An algorithm field exists for choosing a ranking algorithm — it accepts &quot;&quot;, recent, default, or latest, and all of them fall through to score_recent.</li>
+<li>An algorithm field exists for choosing a ranking algorithm, it accepts &quot;&quot;, recent, default, or latest, and all of them fall through to score_recent.</li>
 </ul>
 <p>This confirms something people often assume isn&#x27;t true: the in-network half of the feed involves no ML at the sourcing stage. It is simply a time-ordered list of everything the people you follow have posted in the last two days.</p>
 
-<a class="marker" href="#a3"><span>4.3</span></a>
+<a class="marker" href="#grox"><span>4.3</span></a>
 
-<h3 id="a3">A3 · Making it understood</h3>
+<h3 id="grox">Making it understood</h3>
 
-<p class="section-meta"><code>grox/</code> — two-stage PTOS classification, embeddings, topic annotations <strong>Need ★★★★☆ · Fun ★★★★★</strong> <code>[shadowban]</code></p>
+<aside><code>grox/</code> <code>[shadowban]</code></aside>
 
-<p>Grox is used to understand content. The posts you post get read, with the text and images rendered into a single interleaved document, handled by a vision-language model — Grok in most modes, though a 26B Gemma model is paired with Grok for three of five modes (STANDARD, RECOVERY, LIVE_CLUSTER_ANCHORS), with Grok alone for DELUXE and BACKFILL.</p>
+<p>Grox is used to understand content. The posts you post get read, with the text and images rendered into a single interleaved document, handled by a vision-language model, Grok in most modes, though a 26B Gemma model is paired with Grok for three of five modes (STANDARD, RECOVERY, LIVE_CLUSTER_ANCHORS), with Grok alone for DELUXE and BACKFILL.</p>
 <p>The safety classification here runs in two stages:</p>
 <p>The first is a call named &quot;decide,&quot; which determines which broad policy categories are violated.</p>
 <p>A focused call per violated category that pins down a specific leaf policy.</p>
-<p>The model routing varies by category and by how much traction the post already gets. This is the only component in the entire system that reads content (the ranking model, as we see in B7, never does).</p>
+<p>The model routing varies by category and by how much traction the post already gets. This is the only component in the entire system that reads content (<a href="#phoenix">the ranking model</a> never does).</p>
 <p>On the redaction, fairly stated, the prompt templates are deliberately withheld to (according to our conversation with the X engineering team) prevent people from reverse-engineering the safety guards and to prevent people from A/B testing their way around it. But you can see the policy taxonomy being public, even though the wording isn&#x27;t.</p>
 
-<a class="marker" href="#a4"><span>4.4</span></a>
+<a class="marker" href="#media-models"><span>4.4</span></a>
 
-<h3 id="a4">A4 · Judging the picture</h3>
+<h3 id="media-models">Judging the picture</h3>
 
-<p class="section-meta"><code>media-model-proxy/</code> · <code>clip/</code> · <code>adult-content/</code> · <code>pnsfwmedia/</code> <strong>Need ★★★☆☆ · Fun ★★★☆☆</strong> <code>[shadowban]</code></p>
+<aside><code>media-model-proxy/, clip/, adult-content/</code> <code>[shadowban]</code></aside>
 
 <p>Following Grok, there are a few more media models specifically trained by the team that handles media and trust and safety:</p>
 <ul>
@@ -955,11 +1245,11 @@
 <p>A stateless proxy sits in front of the fleet, fetches each piece of media once, and pushes it out to every model. The media score is then fused with an account-level health score before a verdict.</p>
 <p>This means the picture is judged by all the policies that go into media model policies, as well as who posted it.</p>
 
-<a class="marker" href="#a5"><span>4.5</span></a>
+<a class="marker" href="#account-scoring"><span>4.5</span></a>
 
-<h3 id="a5">A5 · Judging the account</h3>
+<h3 id="account-scoring">Judging the account</h3>
 
-<p class="section-meta"><code>agatha/</code> (PMI) · <code>bdsm/</code> (behavior transformer) · <code>user-cred-v2/</code> (PageRank / reputation exemptions) <strong>Need ★★★☆☆ · Fun ★★★★☆</strong> <code>[shadowban]</code></p>
+<aside><code>agatha/, bdsm/, user-cred-v2/</code> <code>[shadowban]</code></aside>
 
 <p>Now you know that a post is judged by both the media model policies and the account-level scoring. In this section, we will dive more into the account-level scoring.</p>
 <p>There are practically three systems that score the account using very different methods:</p>
@@ -967,11 +1257,11 @@
 <p>BDSM (not the BDSM you are thinking of) is a transformer over the account&#x27;s chronological action sequence, with positional encoding derived from real timestamps rather than token index. It tracks the chronological history of the user to see the rhythm and timing of what you have done, scoring a set of inauthentic behavior heads. Enforcement requires two thresholds to be crossed at once, and an account near the boundary gets a liveness challenge instead of a suspension.</p>
 <p>user-cred-v2 (user credibility) uses PageRank over the follow and engagement graphs to produce a reputation score.</p>
 
-<a class="marker" href="#a6"><span>4.6</span></a>
+<a class="marker" href="#rule-engines"><span>4.6</span></a>
 
-<h3 id="a6">A6 · From scores to labels</h3>
+<h3 id="rule-engines">From scores to labels</h3>
 
-<p class="section-meta"><code>scarecrow/</code> · <code>botmaker/</code> · <code>botmaker-rules/</code> · <code>abuse-enforcement-service/</code> <strong>Need ★★★☆☆ · Fun ★★★★☆</strong> <code>[shadowban]</code></p>
+<aside><code>botmaker/, scarecrow/, abuse-enforcement-service/</code> <code>[shadowban]</code></aside>
 
 <p>Model scores are not labels: something has to decide that a score of 0.83 on some head means a post gets marked.</p>
 <p>There are three services around the rule engines that turn model scores into labels of some sort: Bot Maker, Scarecrow, and Abuse Enforcement Service.</p>
@@ -980,20 +1270,22 @@
 <p><strong>Abuse Enforcement Service:</strong> The service that works on things at the account level, evaluating rules over model score streams and issuing labels, challenges, and suspensions (with credibility, exemptions, deduplication, and daily caps).</p>
 <p>The account pipeline we are talking about here defaults to suspend, while the post pipeline we talked about earlier defaults to skip. The default posture is obviously stricter for people than for posts.</p>
 
-<a class="marker" href="#a7"><span>4.7</span></a>
+<a class="marker" href="#label-aggregation"><span>4.7</span></a>
 
-<h3 id="a7">A7 · The loop that closes</h3>
+<h3 id="label-aggregation">The loop that closes</h3>
 
-<p class="section-meta"><code>safety-label-user-agg/</code> <strong>Need ★★★★☆ · Fun ★★★★★</strong> <code>[shadowban]</code> <code>[policy]</code></p>
+<aside><code>safety-label-user-agg/</code> <code>[shadowban]</code> <code>[policy]</code></aside>
 
-<p>safety-label-user-agg (aggregation) closes the loop. It consumes the stream of label events that we were mentioning from A3 to A6, rescans the author&#x27;s recent posts, and writes in account-level labels based on windowed counts, which the visibility system then reads from the next request.</p>
+<p>safety-label-user-agg (aggregation) closes the loop. It consumes the stream of label events that we were mentioning from <a href="#grox">content understanding</a> to <a href="#rule-engines">the rule engines</a>, rescans the author&#x27;s recent posts, and writes in account-level labels based on windowed counts, which the visibility system then reads from the next request.</p>
 <p>So, labels on your posts get added to your account (not to the posts themselves). This changes how your future posts are treated, which then produces more labels. The labeling process there becomes a closed loop.</p>
 
-<a class="marker" href="#a8"><span>4.8</span></a>
+<d-figure id="labelloop-figure"></d-figure>
 
-<h3 id="a8">A8 · Where the labels live</h3>
+<a class="marker" href="#label-stores"><span>4.8</span></a>
 
-<p>Manhattan <code>safety_label_store</code> · twemcache <code>slm_*</code> · Gizmoduck user labels <strong>Need ★★★★☆ · Fun ★★☆☆☆</strong> <code>[eng]</code></p>
+<h3 id="label-stores">Where the labels live</h3>
+
+<aside><code>safety_label_store, twemcache, Gizmoduck</code> <code>[eng]</code></aside>
 <p>All the above that we described is stored in three tiers:</p>
 <ul>
 <li>In-process cache</li>
@@ -1003,50 +1295,52 @@
 <p>Cache lifetimes are derived from the post creation timestamp, so recently published posts recheck their labels more often than old ones: a post under five minutes old gets a 30-second TTL, anything older gets 60 seconds. A fresh post that gets classified sees the consequences within half a minute.</p>
 <p>These stores are the entire interface between the two halves of the system. The labeling pass never calls the request pass. It just writes the labels to the store.</p>
 
-<a class="marker" href="#a9"><span>4.9</span></a>
+<a class="marker" href="#rankall-admission"><span>4.9</span></a>
 
-<h3 id="a9">A9 · Safety, applied twice</h3>
+<h3 id="rankall-admission">Safety, applied twice</h3>
 
-<p class="section-meta"><code>phoenix-rankall-strato/</code> (with its VF gate) → <code>phoenix-rankall/</code> Parquet corpus <strong>Need ★★★★★ · Fun ★★★★★</strong> <code>[recsys]</code> <code>[shadowban]</code></p>
+<aside><code>phoenix-rankall-strato/</code> <code>[shadowban]</code></aside>
 
 <p>Before a post can be recommended to strangers, it has to enter the retrieval index, which is what Phoenix-RankAll builds. Collections of eligible posts are windowed and materialized into snapshots that the retrieval model loads.</p>
-<p>The critical detail here is in the layer that decides membership: before a post joins any index, that layer asks visibility filtering whether the post should be dropped at the recommendation safety level (you can see the call at event processing configuration).</p>
+<p>The critical detail here is in the layer that decides membership: before a post joins any index, that layer asks <a href="#visibility-filtering">visibility filtering</a> whether the post should be dropped at the recommendation safety level (you can see the call at event processing configuration).</p>
 <p>So safety is really applied twice, at two different times and in two different senses:</p>
 <p>Once here at index admission, globally and in advance. A post that would be vetoed for recommendations never becomes a retrieval candidate for anyone.</p>
-<p>Once again at request time (via B11), per viewer, with the answer depending on who is asking.</p>
+<p>Once again at request time (via <a href="#visibility-filtering">the visibility check</a>), per viewer, with the answer depending on who is asking.</p>
 <p>This matters for the transparency question more than almost anything else in this repository. &quot;Was my post filtered?&quot; has two possible answers at two different times, and only the second one is personal. The first one happens before any particular reader exists.</p>
 
-<a class="marker" href="#semantic-id"><span>4.10</span></a>
+<a class="marker" href="#semantic-ids"><span>4.10</span></a>
 
-<h4 id="semantic-id">Semantic ID</h4>
+<h3 id="semantic-ids">A post becomes six tokens</h3>
 
-<p>Semantic ID: this is the most novel thing in this release, and the part a recommender system reader will find the most directly useful. If you are an engineer working in recommenders, you might also find this quite interesting.</p>
+<aside><code>phoenix/reference/sid_codebook.py</code> <code>[recsys]</code></aside>
+
+<p>This is the most novel thing in this release, and the part a recommender system reader will find the most directly useful. If you are an engineer working in recommenders, you might also find this quite interesting.</p>
 <p>This is exactly the process of how a post becomes six tokens: rather than represent a post by an opaque embedding, the Phoenix retrieval path quantizes embeddings into semantic IDs (six levels of 256 centroids each, produced by a residual quantized k-means). The training loop is about 200 readable lines: fit centroids at level one, subtract to get the residual, refit the next level&#x27;s centroids on that residual, and repeat six times (in phoenix/reference/sid_codebook.py).</p>
 <p>There are three reasons why this is really important:</p>
 <p>It uses k-means, not a learned VAE. Semantic IDs are usually associated with the RQ-VAE approach, which requires auxiliary training and careful handling of codebook collapse. This does the same job with a clustering algorithm and no extra model. If you have been putting off adding semantic IDs because of the training overhead, that objection just got weaker.</p>
 <p>The address space is enormous, and the representation is tiny. 256 raised to the power of 6 is roughly 2.8 × 10^14 addressable items, in just 6 tokens per post.</p>
 <p>They are not just an index, but are truly in the user history. Semantic IDs are hydrated into the user history at request time through a dedicated lookup service, and the retrieval tower is then trained with them. Remove them and the checkpoint no longer loads; that is a far deeper architectural commitment than using semantic IDs for indexing only.</p>
 
-<a class="marker" href="#a10"><span>4.11</span></a>
+<a class="marker" href="#simclusters"><span>4.11</span></a>
 
-<h3 id="a10">A10 · The oldest thing in the system</h3>
+<h3 id="simclusters">The oldest thing in the system</h3>
 
-<p class="section-meta"><code>simclusters/</code> — offline jobs + streaming indexes <strong>Need ★★★☆☆ · Fun ★★★★☆</strong> <code>[recsys]</code></p>
+<aside><code>simclusters/</code> <code>[recsys]</code></aside>
 
 <p>SimCluster is a candidate generation method dating back to 2020, still carried forward into the 2026 release. It is definitely one of the methods from the 2020 era, sitting alongside a transformer, and is still here because it surfaces something that the newer models don&#x27;t: a community index.</p>
 <p>SimCluster factorizes the follow graph into roughly 145,000 communities, then propagates community members to users, posts, and topics. A streaming layer maintains decayed community-to-post indexes, and an ANN (approximate nearest neighbor) server answers queries under a tight deadline.</p>
 
-<a class="marker" href="#part-4-c-cross-cutting-each-is-its-own-topic-not-a-flow-stag"><span>5</span></a>
+<a class="marker" href="#part-4-cross-cutting"><span>5</span></a>
 
-<h2 id="part-4-cross-cutting">Part 4 — C. Cross-cutting (each is its own topic, not a flow stage)</h2>
+<h2 id="part-4-cross-cutting">Part 4: Cross-cutting</h2>
 
-<a class="marker" href="#c2"><span>5.1</span></a>
+<a class="marker" href="#xrex-training"><span>5.1</span></a>
 
-<h3 id="c2">C2 · Can you actually run it?</h3>
+<h3 id="xrex-training">Can you actually run it?</h3>
 
-<p class="section-meta"><code>phoenix/xrex/</code> — data, loss, kernels, checkpoints <strong>Need ★★★☆☆ · Fun ★★★★★</strong> <code>[eng]</code> <code>[recsys]</code></p>
+<aside><code>phoenix/xrex/</code> <code>[eng]</code> <code>[recsys]</code></aside>
 
-<p>The model in B7 has to learn somewhere: it learns from logs of feeds that have already been served (here is what we showed someone, here is what they did, adjust, repeat). Training reads either the live event stream or the Parquet dumps, converts them into batches, and splits them into in-batch negatives: candidates borrowed from other users in the same batch, used as examples of items not engaged with. The loss combines cross-entropy across the action heads with a regression term for dwell time.</p>
+<p>The <a href="#phoenix">ranking model</a> has to learn somewhere: it learns from logs of feeds that have already been served (here is what we showed someone, here is what they did, adjust, repeat). Training reads either the live event stream or the Parquet dumps, converts them into batches, and splits them into in-batch negatives: candidates borrowed from other users in the same batch, used as examples of items not engaged with. The loss combines cross-entropy across the action heads with a regression term for dwell time.</p>
 <p>You can actually run this, which is the most reusable and coolest part of this release. They ship a synthetic data generator, so the entire loop runs with no access to anything of theirs.</p>
 <p>Here is what you will need:</p>
 <ul>
@@ -1065,31 +1359,25 @@
 <p>What you cannot do at all here is train on real data: while the loop is real and complete, the data is entirely synthetic.</p>
 <p>There are also no reference metrics. We fed this back to the Twitter team, but it is very difficult for them to provide them. Nothing tells you whether your run is correct: no expected loss curve, no held-out numbers, and no baselines. There is only a measured timing section, which measures wall-clock performance, not quality. If you want to know whether your training actually worked, it is essentially just a vibe check.</p>
 
-<a class="marker" href="#c3"><span>5.2</span></a>
+<a class="marker" href="#storage-substrate"><span>5.2</span></a>
 
-<h3 id="c3">C3 · The stores are the real API</h3>
+<h3 id="storage-substrate">The stores are the real API</h3>
 
-<p>Manhattan · Kafka · Strato · caches <strong>Need ★★★★☆ · Fun ★★★★★</strong> <code>[eng]</code></p>
+<aside><code>Manhattan, Kafka, Strato</code> <code>[eng]</code></aside>
 <p>So there&#x27;s actually very little cross-service communication per se. All services write rows into the shared database, and everyone just reads from the common knowledge of the cross-model relationship in the system. They&#x27;re all store-mediated. Except for home mixers fanning out in scoring and filtering services, all else travel through a durable store in a Kafka topic.</p>
 <p>This is very much a system-level insight of the whole release: the architecture is not really a call graph, but a set of servers agreeing on a shared schema. That is why the two paths (A and B) can develop independently, why there is really no inter-service communication, and honestly, how we should describe a change in which the store&#x27;s content is changed.</p>
 
-<a class="marker" href="#c4"><span>5.3</span></a>
+<a class="marker" href="#feedback-loops"><span>5.3</span></a>
 
-<h3 id="c4">C4 · Three feedback loops</h3>
+<h3 id="feedback-loops">Three feedback loops</h3>
 
-<p>training log · warm-cache fast path · label→account-label loop <strong>Need ★★★★☆ · Fun ★★★★★</strong> <code>[policy]</code></p>
-<p><strong>The training log.</strong> A sampled Kafka record of each served top-50, carrying the exact applied weight map — so offline analysis can reproduce any score that was actually served. The cached model request is its join key. Today&#x27;s feed is tomorrow&#x27;s training data.</p>
-<p><strong>The warm-cache fast path.</strong> This request&#x27;s top-scoring posts are cached and become the next request&#x27;s candidate source (B4), bypassing recall and scoring entirely.</p>
-<p><strong>The label loop.</strong> Post labels aggregate into account labels, which change how future posts are treated (A7).</p>
+<aside><code>[policy]</code></aside>
+<p><strong>The training log.</strong> A sampled Kafka record of each served top-50, carrying the exact applied weight map, so offline analysis can reproduce any score that was actually served. The cached model request is its join key. Today&#x27;s feed is tomorrow&#x27;s training data.</p>
+<p><strong>The warm-cache fast path.</strong> This request&#x27;s top-scoring posts are cached and become the next request&#x27;s candidate source (<a href="#sources">the candidate sources</a>), bypassing recall and scoring entirely.</p>
+<p><strong>The label loop.</strong> Post labels aggregate into account labels, which change how future posts are treated (<a href="#label-aggregation">the label aggregator</a>).</p>
 <p>Each loop is short and each is invisible from inside a single request.</p>
 
-<a class="marker" href="#c5"><span>5.4</span></a>
-
-<h3 id="c5">C5 · What&#x27;s withheld, and what it costs</h3>
-
-<p class="section-meta"><code>under-the-hood/</code> <strong>Need ★★★★☆ · Fun ★★★☆☆</strong> <code>[policy]</code></p>
-
-  </d-article>
+</d-article>
 
   <d-appendix>
     <h3>Contributions</h3>
@@ -1098,11 +1386,29 @@
 
     <h3>A note on the code</h3>
     <p>All references are to <code>xai-org/x-algorithm</code> at commit
-      <code>5e40600</code> unless noted otherwise.</p>
+      <code>5e40600</code> (upstream <code>bc8e5f0</code>), 28 August 2026, unless noted
+      otherwise. The one exception is the value-model figure: it reads
+      <code>home-mixer/params/param.rs</code> from <code>main</code> each time the page
+      loads, so those weights are whatever X is shipping now rather than what they were
+      when this was written. It says which it is showing. Three of them changed during the
+      fortnight we spent writing.</p>
 
     <d-bibliography src="bibliography.bib"></d-bibliography>
   </d-appendix>
 
+
+  <footer class="site-footer">
+    <div class="sf-inner">
+      <span class="sf-links">
+        <a href="https://ysli.dev">ysli.dev</a>
+        <a href="https://github.com/yslidev/x-recsys-analysis">source</a>
+        <a href="https://github.com/xai-org/x-algorithm">the algorithm</a>
+      </span>
+      <span class="sf-meta">Yushan Li &amp; Idhant Gulati &middot; 2026</span>
+    </div>
+  </footer>
+
+  <!-- Hidden via CSS; see the distill-footer rule in <head>. Keep the tag. -->
   <distill-footer></distill-footer>
 
   <script>
@@ -1117,7 +1423,14 @@
     });
   </script>
 
+  <script src="assets/weights-source.js"></script>
   <script src="assets/hero.js" defer></script>
+  <script src="assets/weights-figure.js" defer></script>
+  <script src="assets/visibility-figure.js" defer></script>
+  <script src="assets/phoenix-figure.js" defer></script>
+  <script src="assets/labelloop-figure.js" defer></script>
+
+
 
   <script>
     // --- Fonts inside shadow roots -----------------------------------------
@@ -1188,7 +1501,7 @@
 
         // `position: sticky` only travels within the element's own grid area,
         // so the sidebar has to span every row of the article. Only in the
-        // wide layout — inline, spanning rows would overlap the body text.
+        // wide layout, inline, spanning rows would overlap the body text.
         const wide = window.matchMedia('(min-width: 1000px)');
         function setSpan() {
           toc.style.gridRow = wide.matches

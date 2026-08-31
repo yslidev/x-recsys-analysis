@@ -4,8 +4,6 @@ A walk through the open-sourced For You pipeline, in the order it actually runs.
 
 Code references verified against `xai-org/x-algorithm` @ `5e40600` (upstream `bc8e5f0`), 28 Aug 2026.
 
-**Rating key:** **Need ★** how much you need it to follow the system · **Fun ★** how
-interesting if you're just curious.
 **Tags:** `[reach]` why your post travelled or didn't · `[shadowban]` how content gets hidden · `[eng]` implementation detail · `[recsys]` for people who build recommenders · `[policy]` a value judgment encoded in code
 
 ---
@@ -13,12 +11,12 @@ interesting if you're just curious.
 ## Introduction
 
 The X engineering team open-sourced a much larger portion of their recommendation system
-earlier this month — the third update since the original release in January, and by far the
+earlier this month, the third update since the original release in January, and by far the
 biggest. Yushan had the good fortune of being invited to review the code with the team before
 it went public.
 
 We've spent the last few weeks reading it, running it, and arguing about it, and we had more
-fun than we expected to. We think you will too — and not only if you build recommender
+fun than we expected to. We think you will too, and not only if you build recommender
 systems. If you just use the platform and have ever wondered why one post got 10,000 views and
 a near-identical one got 200, the answer is in here somewhere.
 
@@ -27,17 +25,17 @@ something longer than a thread; in exchange, we'll try to make it more interesti
 lecture. And everything here we read, traced, and where we could, ran ourselves.
 
 As for why you'd read this instead of just cloning the repo: the code is organized the way
-software is organized — by service, by module, by team. It is not organized the way the system
+software is organized, by service, by module, by team. It is not organized the way the system
 actually *runs*. So that's what we've done here instead. One post, from the moment it's
 published to the moment it lands in someone's feed, in the order the machine actually touches
 it.
 
 ---
 
-# Part 1 — Six verbs
+# Part 1: Six verbs
 `candidate-pipeline/`
 
-**Need ★★★★★ · Fun ★★★☆☆** `[eng]`
+`[eng]`
 
 Every stage you are about to walk through is an instance of the same small set: go fetch things
 (source), fill things in (hydrator), throw things out (filter), put a number on things
@@ -45,14 +43,14 @@ Every stage you are about to walk through is an instance of the same small set: 
 
 ---
 
-# Part 2 — B. fyp
+# Part 2: B. fyp
 
 In Section B, we'll go through the For You page. When a user opens a request, when the user
 opens a For You page, within hundreds of milliseconds, this is what happens
 
 ### B1 · The request arrives
-`home-mixer/` QueryBuilder — viewer data, opt-outs, cursors
-**Need ★★★☆☆ · Fun ★☆☆☆☆** `[eng]`
+`home-mixer/` QueryBuilder, viewer data, opt-outs, cursors
+`[eng]`
 
 This is where the whole For You page gets initialized when a user enters the app by signaling
 the home-mixer api for the timeline curation / generation for a given validated viewer_id. A
@@ -60,8 +58,8 @@ For You gRPC request hits get_for_you_feed_urt. Before any posts or ads are fetc
 QueryBuilder::build turns that request into a ScoredPostsQuery.
 
 ### B2 · Everything that isn't a post
-`ForYouCandidatePipeline` — 7 parallel sources, one wraps the post pipeline
-**Need ★★★☆☆ · Fun ★★☆☆☆** `[eng]`
+`ForYouCandidatePipeline`: 7 parallel sources, one wraps the post pipeline
+`[eng]`
 
 So then, the section decides what appears on the timeline besides posts. These seven sources
 listed below run in parallel, each contributing to a different type of item.
@@ -77,8 +75,8 @@ listed below run in parallel, each contributing to a different type of item.
 - Feed surveys - in-feed survey card asking for feedback about the timeline FeedSurveySource
 
 ### B3 · The system looks you up
-17 hydrators, in parallel — `home-mixer/query_hydrators/`
-**Need ★★★★★ · Fun ★★★★☆** `[eng]` `[reach]`
+17 hydrators, in parallel, `home-mixer/query_hydrators/`
+`[eng]` `[reach]`
 
 At B3, we look you up before looking at any post. There are 17 parallel lookups, all about the
 user:
@@ -99,8 +97,8 @@ and the state.
 - User action sequence fetched twice at ranking and retrieval shapes
 
 ### B4 · Where the posts come from
-Thunder · Phoenix retrieval · SimClusters ANN · TweetMixer · cached-posts fast path — `home-mixer/sources/`
-**Need ★★★★★ · Fun ★★★★☆** `[reach]` `[recsys]`
+Thunder · Phoenix retrieval · SimClusters ANN · TweetMixer · cached-posts fast path: `home-mixer/sources/`
+`[reach]` `[recsys]`
 
 Once we get enough understanding about the user, we try to go into several sources, including:
 
@@ -119,8 +117,8 @@ carry their stored scores). It's a reuse mechanism for pagination/refresh, not a
 algorithm.
 
 ### B5 · The system looks *them* up
-12 hydrators — `home-mixer/candidate_hydrators/`
-**Need ★★★★☆ · Fun ★★★☆☆** `[eng]`
+12 hydrators, `home-mixer/candidate_hydrators/`
+`[eng]`
 
 InNetworkCandidateHydrator · BidirectionalFollowHydrator · core post data · QuoteHydrator ·
 MediaInfoHydrator · SubscriptionHydrator · GizmoduckCandidateHydrator (author data) ·
@@ -134,8 +132,8 @@ Twelve more parallel lookups fill each in: the text, the media, the person who p
 language, basically the content. This process is what we call the "hydrator."
 
 ### B6 · Eighteen ways to get cut
-18 filters, sequential — `home-mixer/filters/`
-**Need ★★★★☆ · Fun ★★★★☆** `[reach]`
+18 filters, sequential, `home-mixer/filters/`
+`[reach]`
 
 Filters here for the obvious notes: there are 18 checks in order.
 
@@ -172,8 +170,8 @@ list of accounts excluded from recommendations, with the Brazilian electoral cou
 language quoted directly in the source comment, which I think is pretty interesting.
 
 ### B7 · The only stage that judges you
-`phoenix/` serving + model — candidate isolation, hash embeddings
-**Need ★★★★★ · Fun ★★★★★** `[eng]` `[recsys]`
+`phoenix/` serving + model: candidate isolation, hash embeddings
+`[eng]` `[recsys]`
 
 Read user hash embedding
 
@@ -220,8 +218,8 @@ a small piece of personalization; that 1,024-event history carries far more sign
 single user vector.
 
 ### B8 · Twenty-six numbers
-`RankingScorer` — weights, offset_score, cold-start / diversity / OON adjustments — `home-mixer/scorers/`, `params/param.rs`
-**Need ★★★★★ · Fun ★★★★★** `[policy]` `[reach]`
+`RankingScorer`: weights, offset_score, cold-start / diversity / OON adjustments, `home-mixer/scorers/`, `params/param.rs`
+`[policy]` `[reach]`
 
 ```
 score = Σ  wᵢ  ·  P(actionᵢ | this viewer, this post)
@@ -276,29 +274,29 @@ Positives +43.32 · Negatives −367.22.
 #### Policy / moral questions raised by the weights
 
 Report at −234 means content is buried for predicted offence, not actual offence. A 1% predicted
-report probability outweighs a certain like fivefold. Nobody has to report anything —
+report probability outweighs a certain like fivefold. Nobody has to report anything , 
 resembling previously-reported content is sufficient. Who is over-represented in that training
 signal?
 
 Mute (−58.8) is penalised 1.9× harder than block (−31.2), inverting user intent. Block is the
 stronger action. Weighting by frequency rather than intensity would produce exactly this
-ordering — is that what happened, and is it intended?
+ordering, is that what happened, and is it intended?
 
 Reply at 10× favorite rewards disagreement. Replies skew argumentative; likes skew approving.
-The "engagement means conflict" critique now has a number attached — does weighting conversation
+The "engagement means conflict" critique now has a number attached, does weighting conversation
 10× above approval systematically advantage contentious content?
 
 Copy-link share at 20 is the top signal, and it can't tell admiration from outrage. Both get
 copied and sent. Is the most-rewarded action also the most outrage-correlated one?
 
-Dwell was 0.0 until 25 August — a real ethical choice, undercut by its own alternative.
+Dwell was 0.0 until 25 August, a real ethical choice, undercut by its own alternative.
 Declining to optimise attention time is genuinely creditable. But cont_dwell_time is 0.004, the
 gated dwell-regret model makes dwell the multiplicand of the entire score, and twelve days into
 this release dwell itself went to 0.05. Was the zero a commitment, or a headline number while
 some viewers get the opposite?
 
 Nothing in the formula refers to a post being true, accurate, or harmful. The only harm proxies
-are predicted reactions. The system has no concept of wrong — only of disliked. Everything
+are predicted reactions. The system has no concept of wrong, only of disliked. Everything
 normative is delegated to visibility filtering's labels, which is a defensible architecture but
 should be said out loud.
 
@@ -307,13 +305,13 @@ the only structural counterweights, against a model free to output arbitrarily l
 gaps. Is the commitment to diversity real or nominal?
 
 The bidirectional boost aims a lever at the social graph, not content. +15 reply weight for
-mutual follows — 4× — advantages established reciprocal networks over new accounts. That's a
-rich-get-richer mechanism, and it's the one value X has documented as deliberately tuned twice —
+mutual follows, 4×, advantages established reciprocal networks over new accounts. That's a
+rich-get-richer mechanism, and it's the one value X has documented as deliberately tuned twice , 
 launched broadly at 20 on 13 July 2026, then lowered to 15 on 24 July.
 
 ### B9 · The score gets overridden
-`vm-ranker/` — greedy MAP-DPP
-**Need ★★★★☆ · Fun ★★★★★** `[recsys]` `[policy]`
+`vm-ranker/`: greedy MAP-DPP
+`[recsys]` `[policy]`
 
 *(Moved up from the end of the document. Your own text says it runs before the top-50 selector,
 and B7 promises a B9.)*
@@ -340,13 +338,13 @@ this looks absolutely maximally diverse, so missing data is not really penalized
 
 ### B10 · Sort, and keep fifty
 `TopKScoreSelector`
-**Need ★★☆☆☆ · Fun ★☆☆☆☆** `[eng]`
+`[eng]`
 
 Sort by score and keep 50
 
 ### B11 · Two questions, two realities
-`visibility-filtering/` (+ client) — VFFilter / AncillaryVFFilter / conversation dedup
-**Need ★★★★★ · Fun ★★★★★** `[shadowban]`
+`visibility-filtering/` (+ client): VFFilter / AncillaryVFFilter / conversation dedup
+`[shadowban]`
 
 This is the only stage that can make a post cease to exist for you. For each survivor, the
 safety system decides whether to show it, blur it behind a tap, or not show it at all.
@@ -375,8 +373,8 @@ Then, posts whose quoted posts or thread ancestors were vetoed are dropped too, 
 highest-scoring branch of any conversation survives.
 
 ### B12 · Ads, prompts, and the slots they fill
-ads blender · Who-to-Follow · prompts · survey slots — `home-mixer/selectors/`
-**Need ★★☆☆☆ · Fun ★★★☆☆** `[eng]`
+ads blender · Who-to-Follow · prompts · survey slots: `home-mixer/selectors/`
+`[eng]`
 
 Blending basically spaces things out. Ads get spaced out, each with a safe neighbor:
 
@@ -387,16 +385,16 @@ Blending basically spaces things out. Ads get spaced out, each with a safe neigh
 Structurally, ad placement is a separate, deterministic step applied after ranking finishes. So
 nothing in the 26 weights is about revenue, which is, I guess, really good.
 
-### B13 · Served — and written down
+### B13 · Served, and written down
 response marshalling into a Thrift URT timeline
-**Need ★★☆☆☆ · Fun ★★★☆☆** `[eng]`
+`[eng]`
 
 Then, after you already have your feed, it writes down what it did: a sample of the top 50 with
 the exact weights used, so tomorrow's model can learn from today's feed. And it caches the
 leftovers for your next scroll.
 
-The result is marshalled into a Thrift URT timeline — cursors, the new-posts pill, "not
-interested" feedback actions, conversation modules — and capped at 47 items (RESULT_SIZE(35) +
+The result is marshalled into a Thrift URT timeline, cursors, the new-posts pill, "not
+interested" feedback actions, conversation modules, and capped at 47 items (RESULT_SIZE(35) +
 FEED_MODULE_SLOTS(4) + MAX_JETFUEL_FRAMES_PER_RESPONSE(8); 38 is
 RANKED_FOLLOWING_MAX_RESULT_SIZE, a different surface).
 
@@ -404,13 +402,13 @@ Then, without blocking the response, 17 side effects fire. Three matter enough t
 
 ---
 
-# Part 3 — A. labeling
+# Part 3: A. labeling
 
-## The life of a post — from publish to "eligible candidate" (continuous, off-request)
+## The life of a post: from publish to "eligible candidate" (continuous, off-request)
 
 ### A1 · A post is published
 Kafka `tweet_events` → content-understanding topics
-**Need ★★★★☆ · Fun ★★★☆☆** `[eng]`
+`[eng]`
 
 A post is created and immediately becomes an event on Kafka: tweet_events. From here, it takes
 two entirely separate journeys that never rejoin until someone's feed is being built.
@@ -426,8 +424,8 @@ fact in the system. It is why we get questions like "Why was I ranked so low?" o
 post disappear?" All of those questions are actually about these two different machines.
 
 ### A2 · Making it fetchable
-`thunder/` — feeder → in-memory author index
-**Need ★★★★☆ · Fun ★★★★☆** `[eng]`
+`thunder/`: feeder → in-memory author index
+`[eng]`
 
 Thunder is written in Rust. It holds every post on the platform under 48 hours old entirely in
 RAM, indexed by author.
@@ -444,7 +442,7 @@ Key specifications:
 
 - Retention is 48 hours.
 - Sorting is purely reverse chronological.
-- An algorithm field exists for choosing a ranking algorithm — it accepts "", recent, default,
+- An algorithm field exists for choosing a ranking algorithm, it accepts "", recent, default,
   or latest, and all of them fall through to score_recent.
 
 This confirms something people often assume isn't true: the in-network half of the feed involves
@@ -452,11 +450,11 @@ no ML at the sourcing stage. It is simply a time-ordered list of everything the 
 follow have posted in the last two days.
 
 ### A3 · Making it understood
-`grox/` — two-stage PTOS classification, embeddings, topic annotations
-**Need ★★★★☆ · Fun ★★★★★** `[shadowban]`
+`grox/`: two-stage PTOS classification, embeddings, topic annotations
+`[shadowban]`
 
 Grox is used to understand content. The posts you post get read, with the text and images
-rendered into a single interleaved document, handled by a vision-language model — Grok in most
+rendered into a single interleaved document, handled by a vision-language model, Grok in most
 modes, though a 26B Gemma model is paired with Grok for three of five modes (STANDARD, RECOVERY,
 LIVE_CLUSTER_ANCHORS), with Grok alone for DELUXE and BACKFILL.
 
@@ -477,7 +475,7 @@ taxonomy being public, even though the wording isn't.
 
 ### A4 · Judging the picture
 `media-model-proxy/` · `clip/` · `adult-content/` · `pnsfwmedia/`
-**Need ★★★☆☆ · Fun ★★★☆☆** `[shadowban]`
+`[shadowban]`
 
 Following Grok, there are a few more media models specifically trained by the team that handles
 media and trust and safety:
@@ -495,7 +493,7 @@ as who posted it.
 
 ### A5 · Judging the account
 `agatha/` (PMI) · `bdsm/` (behavior transformer) · `user-cred-v2/` (PageRank / reputation exemptions)
-**Need ★★★☆☆ · Fun ★★★★☆** `[shadowban]`
+`[shadowban]`
 
 Now you know that a post is judged by both the media model policies and the account-level
 scoring. In this section, we will dive more into the account-level scoring.
@@ -517,7 +515,7 @@ reputation score.
 
 ### A6 · From scores to labels
 `scarecrow/` · `botmaker/` · `botmaker-rules/` · `abuse-enforcement-service/`
-**Need ★★★☆☆ · Fun ★★★★☆** `[shadowban]`
+`[shadowban]`
 
 Model scores are not labels: something has to decide that a score of 0.83 on some head means a
 post gets marked.
@@ -542,7 +540,7 @@ for posts.
 
 ### A7 · The loop that closes
 `safety-label-user-agg/`
-**Need ★★★★☆ · Fun ★★★★★** `[shadowban]` `[policy]`
+`[shadowban]` `[policy]`
 
 safety-label-user-agg (aggregation) closes the loop. It consumes the stream of label events that
 we were mentioning from A3 to A6, rescans the author's recent posts, and writes in account-level
@@ -554,7 +552,7 @@ becomes a closed loop.
 
 ### A8 · Where the labels live
 Manhattan `safety_label_store` · twemcache `slm_*` · Gizmoduck user labels
-**Need ★★★★☆ · Fun ★★☆☆☆** `[eng]`
+`[eng]`
 
 All the above that we described is stored in three tiers:
 
@@ -572,7 +570,7 @@ never calls the request pass. It just writes the labels to the store.
 
 ### A9 · Safety, applied twice
 `phoenix-rankall-strato/` (with its VF gate) → `phoenix-rankall/` Parquet corpus
-**Need ★★★★★ · Fun ★★★★★** `[recsys]` `[shadowban]`
+`[recsys]` `[shadowban]`
 
 Before a post can be recommended to strangers, it has to enter the retrieval index, which is
 what Phoenix-RankAll builds. Collections of eligible posts are windowed and materialized into
@@ -621,8 +619,8 @@ then trained with them. Remove them and the checkpoint no longer loads; that is 
 architectural commitment than using semantic IDs for indexing only.
 
 ### A10 · The oldest thing in the system
-`simclusters/` — offline jobs + streaming indexes
-**Need ★★★☆☆ · Fun ★★★★☆** `[recsys]`
+`simclusters/`: offline jobs + streaming indexes
+`[recsys]`
 
 SimCluster is a candidate generation method dating back to 2020, still carried forward into the
 2026 release. It is definitely one of the methods from the 2020 era, sitting alongside a
@@ -636,11 +634,11 @@ a tight deadline.
 
 ---
 
-# Part 4 — C. Cross-cutting (each is its own topic, not a flow stage)
+# Part 4: C. Cross-cutting (each is its own topic, not a flow stage)
 
 ### C2 · Can you actually run it?
-`phoenix/xrex/` — data, loss, kernels, checkpoints
-**Need ★★★☆☆ · Fun ★★★★★** `[eng]` `[recsys]`
+`phoenix/xrex/`: data, loss, kernels, checkpoints
+`[eng]` `[recsys]`
 
 The model in B7 has to learn somewhere: it learns from logs of feeds that have already been
 served (here is what we showed someone, here is what they did, adjust, repeat). Training reads
@@ -682,7 +680,7 @@ worked, it is essentially just a vibe check.
 
 ### C3 · The stores are the real API
 Manhattan · Kafka · Strato · caches
-**Need ★★★★☆ · Fun ★★★★★** `[eng]`
+`[eng]`
 
 So there's actually very little cross-service communication per se. All services write rows into
 the shared database, and everyone just reads from the common knowledge of the cross-model
@@ -696,10 +694,10 @@ how we should describe a change in which the store's content is changed.
 
 ### C4 · Three feedback loops
 training log · warm-cache fast path · label→account-label loop
-**Need ★★★★☆ · Fun ★★★★★** `[policy]`
+`[policy]`
 
 **The training log.** A sampled Kafka record of each served top-50, carrying the exact applied
-weight map — so offline analysis can reproduce any score that was actually served. The cached
+weight map, so offline analysis can reproduce any score that was actually served. The cached
 model request is its join key. Today's feed is tomorrow's training data.
 
 **The warm-cache fast path.** This request's top-scoring posts are cached and become the next
@@ -712,6 +710,6 @@ Each loop is short and each is invisible from inside a single request.
 
 ### C5 · What's withheld, and what it costs
 `under-the-hood/`
-**Need ★★★★☆ · Fun ★★★☆☆** `[policy]`
+`[policy]`
 
 ---
