@@ -241,6 +241,13 @@
     d-article aside code,
     d-article figcaption code { font-size: 0.85em; }
 
+    /* Rust identifiers are long and unbreakable; in a narrow margin column one
+       token can be wider than the column. Let them break rather than spill. */
+    d-article code, .site-footer code, #weights-extras code {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
     /* Reference data attached to the value-model figure: the modifiers that
        are not action weights. Sits at caption scale, like the figcaption. */
     #weights-extras {
@@ -369,40 +376,6 @@
     /* Wide screens: dock it in the left margin, beside the writing.
        1000px is where the template's own grid gains enough room
        (screen-start -> text-start is ~250px and grows from there). */
-    @media (min-width: 1000px) {
-      /* The template sets `overflow-x: hidden` on d-article, which makes it a
-         scroll container and silently kills `position: sticky` on any child.
-         `clip` gives the same overflow protection without that side effect. */
-      d-article {
-        overflow-x: clip;
-      }
-
-      d-article > d-toc {
-        /* grid-row is set from JS to span the article's full height, which is
-           what gives the sticky element room to travel. */
-        grid-column: screen-start / text-start;
-        justify-self: end;
-        align-self: start;
-        position: sticky;
-        top: 1.5rem;
-        /* border-box, or `width: 100%` measures the grid band and the padding
-           is then added on top -- pushing the box past screen-start and
-           clipping the first character of every entry between ~1000-1350px. */
-        box-sizing: border-box;
-        width: 100%;
-        max-width: 260px;
-        max-height: calc(100vh - 3rem);
-        overflow-y: auto;
-        margin-bottom: 0;
-        padding: 0 1.5rem 0 1rem;
-        border-bottom: none;
-        border-right: 1px solid var(--rule);
-      }
-
-      /* The section-number markers live in the kicker column, which the
-         docked TOC now covers. Hide them only where the sidebar is shown. */
-      d-article .marker { display: none; }
-    }
 
     /* Anchor jumps land with the heading clear of the viewport edge. */
     /* --- Distill site footer -----------------------------------------------
@@ -475,10 +448,6 @@
     #weights-figure .wf-score-note { font-size: 13px; color: rgba(17,17,17,0.55); }
     #weights-figure figcaption { margin-top: 1.1rem; }
 
-    @media (max-width: 700px) {
-      #weights-figure .wf-dial { grid-template-columns: 8.5rem 1fr 3.2rem; }
-      #weights-figure .wf-dial-w { display: none; }
-    }
     @media (prefers-reduced-motion: reduce) {
       #weights-figure .wf-fall rect { transition: none; }
     }
@@ -565,14 +534,11 @@
       margin-top: 16px; padding-top: 10px; border-top: 1px solid var(--rule);
       font-size: 13.5px; line-height: 1.6; color: rgba(17,17,17,0.7); min-height: 3.2em;
     }
-    @media (max-width: 640px) {
-      #visibility-figure .vf-cols { grid-template-columns: 1fr; gap: 20px; }
-    }
+
     @media (prefers-reduced-motion: reduce) {
       #visibility-figure .vf-tick, #visibility-figure .vf-post,
       #visibility-figure .vf-veil { transition: none; }
     }
-
 
     /* --- Phoenix attention figure (assets/phoenix-figure.js) --------------- */
     #phoenix-figure { grid-column: text-start / page-end; margin: 2rem 0 1.5rem; }
@@ -593,9 +559,6 @@
       min-height: 5em;
     }
     #phoenix-figure .px-read b { color: var(--foreground); font-weight: 600; }
-    @media (max-width: 700px) {
-      #phoenix-figure .px-wrap { grid-template-columns: 1fr; }
-    }
 
     /* --- Label loop figure (assets/labelloop-figure.js) -------------------- */
     #labelloop-figure { grid-column: text-start / page-end; margin: 2rem 0 1.5rem; }
@@ -670,12 +633,11 @@
       margin-top: 12px; font-size: 13px; line-height: 1.6;
       color: rgba(17,17,17,0.7); min-height: 3.6em;
     }
-    @media (max-width: 700px) { #labelloop-figure .ll { grid-template-columns: 1fr; } }
+
     @media (prefers-reduced-motion: reduce) {
       #labelloop-figure .ll-post { animation: none; }
       #labelloop-figure .ll-dot, #labelloop-figure .ll-stage { transition: none; }
     }
-
 
     /* --- Article-wide tag key ----------------------------------------------
        Sits in the text column, not the margin: five entries with glosses will
@@ -702,7 +664,6 @@
        occupies screen-start..text-start -- so `grid-column: page` lands a
        figure on top of the sidebar. This gains the extra width on the right,
        where there is nothing to collide with. */
-
 
     /* --- Site footer -------------------------------------------------------
        Hiding Distill's own footer left the page terminating in bare white,
@@ -732,50 +693,108 @@
       color: rgba(17,17,17,0.45);
     }
 
+    /* --- The grid ----------------------------------------------------------
+       Distill sizes its 12 columns in fixed pixels and steps them at 768 /
+       1000 / 1180px, so the layout jumps at three widths and then stops
+       growing: on a wide screen the article sits in a narrow ribbon with
+       empty margins, and between the steps it never quite fits.
 
-    /* --- Narrow screens -----------------------------------------------------
-       The hero and the attention grid are drawn at a fixed logical size, so
-       squeezing them into 375px renders their mono labels at ~4px. Diagrams
-       that cannot reflow get a horizontal scroll container and keep a legible
-       minimum width instead -- the page never scrolls sideways, the figure
-       does. Everything that CAN reflow (chips, dials, rule ticks) already
-       does. */
-    @media (max-width: 700px) {
-      d-title h1 { font-size: 26px; line-height: 1.12em; }
+       One clamped column unit replaces all three steps. Every column, the
+       text measure, the margin notes and the figures now scale continuously
+       with the viewport, with a floor so it stays usable on a small laptop
+       and a ceiling so the line length never gets too long to read.
 
-      #hero-pipeline,
-      #phoenix-figure .px-grid-scroll,
-      #visibility-figure .vf-cols {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: thin;
+       Below 768px Distill's own fractional grid still applies -- at that size
+       the columns have to be fractions of the screen, not multiples of a
+       unit, or the row would be wider than the phone. */
+    @media (min-width: 768px) {
+      .base-grid, distill-header, d-title, d-abstract, d-article, d-appendix,
+      distill-appendix, d-byline, d-footnote-list, d-citation-list, distill-footer {
+        --col: clamp(42px, 4.4vw, 84px);
+        grid-template-columns:
+          [screen-start] 1fr
+          [page-start kicker-start] var(--col)
+          [middle-start] var(--col)
+          [text-start kicker-end] var(--col) var(--col) var(--col) var(--col)
+                                  var(--col) var(--col) var(--col) var(--col)
+          [text-end gutter-start] var(--col)
+          [middle-end] var(--col)
+          [page-end gutter-end] 1fr
+          [screen-end];
       }
-      #hero-pipeline canvas { min-width: 660px; }
-      #phoenix-figure .px-grid { min-width: 330px; }
-
-      /* two columns of rule ticks stay side by side: the whole point is
-         comparing them, so they scroll together rather than stacking */
-      #visibility-figure .vf-cols {
-        grid-template-columns: minmax(260px, 1fr) minmax(260px, 1fr);
-        gap: 16px;
-      }
-
-      /* the scrollbar sits on the container's bottom edge, which is right on
-         top of the figcaption -- give it its own room */
-      #hero-pipeline,
-      #phoenix-figure .px-grid-scroll,
-      #visibility-figure .vf-cols { padding-bottom: 10px; }
-
-      .tag-key { grid-template-columns: 1fr; gap: 2px; }
-      #weights-figure .wf-chip { font-size: 11px; }
-      #labelloop-figure .ll { gap: 18px; }
-      d-article { font-size: 1rem; }
     }
 
-    @media (max-width: 420px) {
-      d-title h1 { font-size: 23px; }
-      #weights-figure .wf-dial { grid-template-columns: 6.5rem 1fr 2.9rem; gap: 7px; }
+    /* The sidebar docks as soon as the screen column can actually hold it,
+       rather than at a round number. */
+    @media (min-width: 880px) {
+      d-article { overflow-x: clip; }
+      d-article > d-toc {
+        grid-column: screen-start / text-start;
+        justify-self: end;
+        align-self: start;
+        position: sticky;
+        top: 1.5rem;
+        width: 100%;
+        max-width: 260px;
+        max-height: calc(100vh - 3rem);
+        overflow-y: auto;
+        margin-bottom: 0;
+        padding: 0 1.5rem 0 0;
+        border-bottom: none;
+        border-right: 1px solid var(--rule);
+      }
+      d-article .marker { display: none; }
     }
+
+    /* --- Sizing ------------------------------------------------------------
+       No width breakpoints. Everything below sizes from its own container or
+       its own content, so there is no viewport where a hand-picked number is
+       wrong. Two mechanisms do the work:
+
+       clamp() for type — one rule instead of a ladder of font sizes.
+
+       minmax() + overflow-x:auto for figures — a figure reflows while it can
+       and scrolls inside itself once it cannot, so the page never scrolls
+       sideways and a diagram never renders its labels at 4px. Diagrams drawn
+       at a fixed logical size (the hero, the attention grid) keep a legible
+       floor; everything made of parts (chips, dials, ticks, rows) simply
+       rewraps. */
+
+    d-title h1 { font-size: clamp(1.45rem, 4.4vw, 2.4rem); }
+    d-article  { font-size: clamp(1rem, 0.97rem + 0.15vw, 1.12rem); }
+
+    /* Fixed-geometry diagrams: reflow is impossible, so scroll instead. */
+    #hero-pipeline,
+    #phoenix-figure .px-grid-scroll,
+    #visibility-figure .vf-cols {
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      padding-bottom: 10px;   /* the scrollbar sits off the caption */
+    }
+    #hero-pipeline canvas    { min-width: 40rem; }
+    #phoenix-figure .px-grid { min-width: 20rem; }
+
+    /* Comparison figures keep their columns side by side at any width: the
+       whole argument is reading one against the other. */
+    #visibility-figure .vf-cols {
+      grid-template-columns: repeat(2, minmax(15rem, 1fr));
+      gap: clamp(0.75rem, 2vw, 1.6rem);
+    }
+
+    /* Part-based figures rewrap on their own. */
+    #phoenix-figure .px-wrap,
+    #labelloop-figure .ll {
+      grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+      gap: clamp(1rem, 2.5vw, 1.75rem);
+    }
+    #weights-figure .wf-dial {
+      grid-template-columns:
+        minmax(5.5rem, 10.5rem) minmax(6rem, 1fr) minmax(2.6rem, auto) minmax(0, auto);
+      gap: clamp(6px, 1.2vw, 10px);
+    }
+    .tag-key { grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr)); }
 
     /* --- Figure house style ------------------------------------------------
        Borrowed from the Chameleon and Thinking Machines pieces in inspo/:
@@ -1145,7 +1164,6 @@
 <p>System is steered away from attention maxing (but prompted with several policy question)</p>
 <d-figure id="weights-figure"></d-figure>
 
-
 <p id="weights-extras">Alongside the 26: <code>BidirectionalFollowReplyWeightBoost</code> 15.0 · <code>BidirectionalFollowDwellWeightBoost</code> 0.0 <code>OonWeightFactor</code> 0.75 · <code>TopicOonWeightFactor</code> 0.5 · <code>AuthorDiversityDecay</code> 0.5 · <code>AuthorDiversityFloor</code> 0.25</p>
 <p><strong>Three of these changed during the August release window</strong> (13 → 28 Aug): <code>Vqv</code> 0.05 → 0.0, <code>VideoOpen</code> 0.05 → 0.07, and <code>Dwell</code> <strong>0.0 → 0.05</strong> in commit <code>0d3cdd8</code> on 25 Aug.</p>
 
@@ -1164,7 +1182,6 @@
 <p>Nothing in the formula refers to a post being true, accurate, or harmful. The only harm proxies are predicted reactions. The system has no concept of wrong, only of disliked. Everything normative is delegated to <a href="#visibility-filtering">visibility filtering&#x27;s</a> labels, which is a defensible architecture but should be said out loud.</p>
 <p>The two anti-concentration levers are both weak. OON at 0.75 and a diversity floor of 0.25 are the only structural counterweights, against a model free to output arbitrarily large probability gaps. Is the commitment to diversity real or nominal?</p>
 <p>The bidirectional boost aims a lever at the social graph, not content. +15 reply weight for mutual follows, 4×, advantages established reciprocal networks over new accounts. That&#x27;s a rich-get-richer mechanism, and it&#x27;s the one value X has documented as deliberately tuned twice, launched broadly at 20 on 13 July 2026, then lowered to 15 on 24 July.</p>
-
 
 -->
 
@@ -1441,7 +1458,6 @@
     <d-bibliography src="bibliography.bib"></d-bibliography>
   </d-appendix>
 
-
   <footer class="site-footer">
     <div class="sf-inner">
       <span class="sf-links">
@@ -1474,8 +1490,6 @@
   <script src="assets/visibility-figure.js" defer></script>
   <script src="assets/phoenix-figure.js" defer></script>
   <script src="assets/labelloop-figure.js" defer></script>
-
-
 
   <script>
     // --- Fonts inside shadow roots -----------------------------------------
