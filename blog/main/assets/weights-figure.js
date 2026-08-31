@@ -49,8 +49,6 @@
 
     HOST.innerHTML = `
       <p class="fig-title">How one post gets its score</p>
-      <p class="fig-subtitle">The weights are global; the probabilities are yours. Multiply,
-        add, and that sum is your feed's sort order.</p>
       <div class="fig-legend">
         <span><i style="background:${C.pos}"></i>reward</span>
         <span><i style="background:${C.neg}"></i>penalty</span>
@@ -72,15 +70,7 @@
           <span class="wf-score-val"></span>
           <span class="wf-score-note"></span>
         </div>
-      </div>
-
-      <figcaption><strong>The value model.</strong> Every weight read from
-        <code>home-mixer/params/param.rs</code>. The twenty-six sum to +${data.positive_sum}
-        of reward against ${fmt(data.negative_sum)} of penalty — roughly eight to one — so the
-        fastest way to move a post is to make someone dislike it.${
-          data.stale && data.stale.length
-            ? ' Dashed chips could not be read live and show their last known value.' : ''}</figcaption>`;
-
+      </div>`;
     // ---- Panel A: the weights, readable ---------------------------------
     HOST.querySelector('.wf-chips').innerHTML = data.weights.map(r => {
       const neg = r.weight < 0;

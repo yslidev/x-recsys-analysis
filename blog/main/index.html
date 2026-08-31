@@ -796,7 +796,6 @@
     }
     .tag-key { grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr)); }
 
-
     /* --- Semantic ID figure (assets/sid-figure.js) ------------------------- */
     #sid-figure { grid-column: text-start / page-end; margin: 2rem 0 1.5rem; }
     #sid-figure .sid {
@@ -1454,12 +1453,7 @@
 
 <p>The <a href="#phoenix">ranking model</a> has to learn somewhere: it learns from logs of feeds that have already been served (here is what we showed someone, here is what they did, adjust, repeat). Training reads either the live event stream or the Parquet dumps, converts them into batches, and splits them into in-batch negatives: candidates borrowed from other users in the same batch, used as examples of items not engaged with. The loss combines cross-entropy across the action heads with a regression term for dwell time.</p>
 <p>You can actually run this, which is the most reusable and coolest part of this release. They ship a synthetic data generator, so the entire loop runs with no access to anything of theirs.</p>
-<p>Here is what you will need:</p>
-<ul>
-<li>Linux, an NVIDIA GPU, and CUDA 12 (stated in quickstart.md). There is a macOS branch in pyproject.toml for a base install, but --extra engine is required for training, and its accelerator dependencies are Linux-gated.</li>
-<li>A Rust toolchain and protoc &gt;= 3.15 (the engine is a Rust extension compiled at install time).</li>
-<li>uv (though if you can follow this post, you probably do not need more hand-holding on dependencies).</li>
-</ul>
+
 <p>The loop has five main steps, all inside the reference folder:</p>
 <ol>
 <li>world_snapshots.py generates a synthetic corpus plus semantic IDs.</li>

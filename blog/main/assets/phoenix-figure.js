@@ -41,9 +41,6 @@
 
   HOST.innerHTML = `
     <p class="fig-title">One pass, N posts, and a hole in the attention matrix</p>
-    <p class="fig-subtitle">Rows are positions doing the looking; columns are positions that
-      can be looked at. A filled cell means attention is allowed. Everything to the right of
-      the history block is a candidate post being scored in the same forward pass.</p>
     <div class="fig-legend">
       <span><i style="background:${C.user}"></i>you</span>
       <span><i style="background:${C.hist}"></i>your history</span>
@@ -59,12 +56,7 @@
         <button class="px-toggle" type="button"></button>
         <p class="px-read"></p>
       </div>
-    </div>
-    <figcaption><strong>Candidate isolation.</strong> The empty block in the lower right is
-      enforced inside the attention kernels, not applied afterwards. What it costs is any
-      ability to reason about the set — which is why deduplication, author diversity and the
-      diversity re-rank all exist downstream as separate stages.</figcaption>`;
-
+    </div>`;
   const svg = HOST.querySelector('.px-grid');
   const toggle = HOST.querySelector('.px-toggle');
   const read = HOST.querySelector('.px-read');

@@ -81,9 +81,6 @@
 
   HOST.innerHTML = `
     <p class="fig-title">The same rules, and then twenty-six more</p>
-    <p class="fig-subtitle">Each tick is one rule, evaluated top to bottom. A Drop returns
-      immediately; an Interstitial is recorded and the scan keeps going. Both readers run the
-      same ${BASE} base rules — one of them then runs ${OON} more.</p>
     <div class="fig-legend">
       <span><i style="background:${C.allow}"></i>allow</span>
       <span><i style="background:${C.inter}"></i>interstitial, shown behind a tap</span>
@@ -100,12 +97,7 @@
         ${col('oon', 'Not a follower', 'timeline_home_recommendations', BASE + OON)}
       </div>
       <p class="vf-note" aria-live="polite"></p>
-    </div>
-    <figcaption><strong>Two questions, two realities.</strong> Rule sets from
-      <code>visibility-filtering/rules/registry.rs</code>; the short-circuit behaviour from
-      <code>evaluate_rules</code> in <code>rules/mod.rs</code>. X's own test for the asymmetry
-      is named <code>nsfw_author_interstitials_in_network_but_drops_oon</code>.</figcaption>`;
-
+    </div>`;
   function col(side, who, level, n) {
     const ticks = Array.from({ length: n }, (_, i) =>
       `<i class="vf-tick${i >= BASE ? ' vf-tick-oon' : ''}" data-i="${i}"></i>`).join('');

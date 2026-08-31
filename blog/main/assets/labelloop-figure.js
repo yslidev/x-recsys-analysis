@@ -41,9 +41,6 @@
 
   HOST.innerHTML = `
     <p class="fig-title">Labels land on your posts. They accumulate on you.</p>
-    <p class="fig-subtitle">Post labels are counted over a window and written back as an
-      <em>account</em> label — so your next post is judged by what your last ones did. No
-      single request ever shows you this happening.</p>
     <div class="fig-legend">
       <span><i style="background:#2596be"></i>clean</span>
       <span><i style="background:#f97316"></i>labelled</span>
@@ -75,14 +72,7 @@
         </div>
         <p class="ll-read"></p>
       </div>
-    </div>
-
-    <figcaption><strong>The label loop.</strong> Post labels aggregate into account labels
-      (<code>safety-label-user-agg/</code>), account labels are read by visibility filtering on
-      the following request, and the treatment of your next post depends on them. The window
-      and the thresholds are not in the open-source tree — the count of ${THRESHOLD} here is
-      illustrative. The shape of the loop is not.</figcaption>`;
-
+    </div>`;
   const ring   = HOST.querySelector('.ll-ring');
   const postsEl= HOST.querySelector('.ll-posts');
   const accEl  = HOST.querySelector('.ll-account');

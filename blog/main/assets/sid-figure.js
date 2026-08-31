@@ -55,9 +55,6 @@
 
   HOST.innerHTML = `
     <p class="fig-title">A post becomes six tokens</p>
-    <p class="fig-subtitle">Each level snaps the vector to its nearest centroid, keeps that
-      centroid's index as one byte, and passes on what it got <em>wrong</em>. The next level
-      quantises the error, not the post. Six rounds, ${CODEBOOK} centroids each.</p>
     <div class="fig-legend">
       <span><i style="background:${C.pt}"></i>the vector being encoded</span>
       <span><i style="background:${C.cent}"></i>this level's codebook</span>
