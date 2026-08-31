@@ -76,15 +76,7 @@
           <button class="sid-reset" type="button">reset</button>
         </div>
       </div>
-    </div>
-
-    <figcaption><strong>Residual-quantized k-means.</strong> Six levels of ${CODEBOOK} centroids,
-      from <code>phoenix/reference/sid_codebook.py</code>; the shape constants are
-      <code>SID_NUM_LEVELS</code> and <code>SID_CODEBOOK_SIZE</code> in
-      <code>dump_gen.py</code>. Two dimensions are drawn here so the geometry is visible —
-      production quantises a much larger vector, which changes the picture and not the
-      procedure. Note what this is <em>not</em>: there is no autoencoder and no learned
-      codebook loss, just k-means run six times on its own leftovers.</figcaption>`;
+    </div>`;
 
   const svg  = HOST.querySelector('.sid-plot svg');
   const code = HOST.querySelector('.sid-code');
