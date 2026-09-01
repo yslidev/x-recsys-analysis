@@ -27,6 +27,7 @@ render: template.v2.js
 	node ../template/bin/render.js -i index.html -o dist/index.html
 	@cp template.v2.js dist/
 	@cp -R assets dist/
+	@python3 tools/fix_render.py
 	@echo "dist/ ready: $$(du -sh dist | cut -f1), deployable as-is"
 
 clean:
