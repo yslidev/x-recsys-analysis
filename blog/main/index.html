@@ -1220,7 +1220,6 @@
 <d-math block>
 \text{score} = \sum_i w_i \cdot P(\text{action}_i \mid \text{viewer}, \text{post})
 </d-math>
-<p><em>The weights are global; personalization lives in the model.</em></p>
 <p>The weights are global, personalization lives within the model.</p>
 <p><a href="#phoenix">Phoenix</a> takes user action sequence [read at <a href="#query-hydrators">query hydration</a>] (up to 1024 recent engagements) and learned user embeddings [read at <a href="#phoenix">the ranking model</a>] and predict P(action) - how likely would a user react (reply/ like/ share/ report) certain posts</p>
 <p>User graph &amp; state [read at <a href="#query-hydrators">query hydration</a>] also used</p>
