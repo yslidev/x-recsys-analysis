@@ -1184,7 +1184,7 @@
 <li>Inventory holdout</li>
 </ol>
 <p>There are a few interesting filters at this stage:</p>
-<p>First is the 48-hour ceiling: the max post age is 48 hours, which matches <a href="#thunder">the retention system</a>. The two independent systems basically agree on the same number, meaning the feed supply window is two days. After that, a post is not just suppressed, it completely ages out of the candidate pool.</p>
+<p>First is the 48-hour ceiling: the max post age is 48 hours, which matches <a href="#thunder">the retention system</a>. The two independent systems basically agree on the same number, meaning the feed supply window is two days. After that, a post is not just suppressed, it completely ages out of the candidate pool. One caveat worth being precise about, because it is easy to overstate: <code>AgeFilter</code> ignores the query entirely, so within this pipeline the cutoff is unconditional — but this pipeline is only one of the seven sources feeding the timeline. Jetfuel frames, push-to-home, ads and who-to-follow never pass through it, and a conversation module can hang an older reply off a recent post. The 48 hours binds <em>out-of-network post recommendations</em>, not everything you will ever see in the app.</p>
 <p>Then there is the hardcoded legal filter on the Brazil 2026 election, which includes a fixed list of accounts excluded from recommendations, with the Brazilian electoral court&#x27;s statutory language quoted directly in the source comment, which I think is pretty interesting.</p>
 
 <a class="marker" href="#phoenix"><span>3.7</span></a>
@@ -1441,6 +1441,8 @@
 <aside><code>phoenix/reference/sid_codebook.py</code> <code>[recsys]</code></aside>
 
 <p>This is the most novel thing in this release, and the part a recommender system reader will find the most directly useful. If you are an engineer working in recommenders, you might also find this quite interesting.</p>
+<p>Worth saying first where those embeddings come from, because the article has not so far: a post's text and images are encoded by <code>Qwen/Qwen3-VL-Embedding-8B</code> (<code>phoenix/reference/mm_encoder.py</code>). That is a different model from the Grok and Gemma pair doing safety classification, and it is not X's own — they ship the embedding algorithm verbatim and leave you to supply the stock public weights. So the vectors being quantised below are reproducible by anyone.</p>
+
 <p>This is exactly the process of how a post becomes six tokens: rather than represent a post by an opaque embedding, the Phoenix retrieval path quantizes embeddings into semantic IDs (six levels of 256 centroids each, produced by a residual quantized k-means). The training loop is about 200 readable lines: fit centroids at level one, subtract to get the residual, refit the next level&#x27;s centroids on that residual, and repeat six times (in phoenix/reference/sid_codebook.py).</p>
 
 <d-figure id="sid-figure"></d-figure>
